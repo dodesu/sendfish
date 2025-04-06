@@ -1,0 +1,42 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body,
+html {
+    height: 100%;
+    margin: 0;
+    background-color: black;
+}
+
+.loader {
+    height: 100vh;
+    width: auto;
+    display: flex;
+    position: relative;
+    overflow: hidden;
+    align-items: center;
+    justify-content: center;
+}
+
+.load-img {
+    height: 100%;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    object-fit: contain;
+}
+
+.circle {
+    height: 82%;
+    aspect-ratio: 1 / 1;
+    border-radius: 50%;
+    background-color: rgb(162 73 101);
+    position: absolute;
+
+    transform-origin: center;
+    transition: transform 0.5s cubic-bezier(.76, .1, .69, .62);
+
+}

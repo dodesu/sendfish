@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sendfish</title>
+    <link rel="stylesheet" href="/css/load.css">
+</head>
+
+<body>
+    <div class="loader">
+        <div class="circle"></div>
+        <img src="/img/Kikuri_load.png" alt="Kikuri load" class="load-img">
+    </div>
+
+    <% if(isLoadInitJS) { %>
+        <script defer type="module" src="/js/keyPair.js"></script>
+        <script defer type="module" src="/js/init.js"></script>
+        <% } %>
+            <script src="/js/load_animation.js"></script>
+</body>
+
+</html>
