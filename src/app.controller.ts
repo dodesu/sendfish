@@ -8,9 +8,18 @@ export class AppController {
 
   @Get()
   @Render('home')
-  getHome(@Req() Req: Request) {
+  async getHome(@Req() Req: Request) {
+    const cat_id = Req.signedCookies['cat_id'];
+    if (cat_id) {
+      return { isLoadInitJS: true };
+    }
 
-    return { isLoadInitJS: Req.signedCookies['cat_id'] === undefined };
+    const is_expired = await this.appService.isExpired(cat_id);
+    if (is_expired) {
+      return { isLoadInitJS: true };
+    }
+
+    return { isLoadInitJS: false };
   }
 
   @Get('get')
