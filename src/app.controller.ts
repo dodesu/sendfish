@@ -10,7 +10,7 @@ export class AppController {
   @Render('home')
   async getHome(@Req() Req: Request) {
     const cat_id = Req.signedCookies['cat_id'];
-    if (cat_id) {
+    if (cat_id == undefined) {
       return { isLoadInitJS: true };
     }
 
@@ -39,9 +39,8 @@ export class AppController {
     Res.cookie('cat_id', cat_id, {
       httpOnly: true,
       maxAge: 60 * 60 * 5 * 1000, //5h 
-      signed: true,
+      signed: true, //if other domain, set to false
     });
-    console.log(`Cat id = ${cat_id}`);
     return Res.json({ cat_id });
   }
 
