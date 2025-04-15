@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { CacheModule } from '@nestjs/cache-manager';
 import { redisStore } from 'cache-manager-redis-yet';
+import { RedisService } from './redis.service';
 
 //Note: ioredis is better - use pub/sub for message waiting (enter id), can use multi websocket server.
 @Module({
@@ -26,5 +27,7 @@ import { redisStore } from 'cache-manager-redis-yet';
     }),
     //register end
   ],
+  providers: [RedisService],
+  exports: [RedisService],
 })
 export class RedisModule { }
