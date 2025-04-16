@@ -1,9 +1,17 @@
+import {
+    generateECDHKeyPair,
+    exportPublicKey,
+    // importPublicKey,
+    // deriveSharedSecret,
+    // base64Converter,
+} from './keyPair.js';
+
 /**
  * 
  * @param {ArrayBuffer} sharedSecret 
  * @returns 
  */
-const deriveAESKey = async (sharedSecret) => {
+export const deriveAESKey = async (sharedSecret) => {
     return await crypto.subtle.importKey(
         "raw",
         sharedSecret,
@@ -19,7 +27,7 @@ const deriveAESKey = async (sharedSecret) => {
  * @param {String} message 
  * @returns 
  */
-const encryptMsg = async (key, message) => {
+export const encryptMsg = async (key, message) => {
     try {
         // Create Initialization Vector (IV) 
         const iv = crypto.getRandomValues(new Uint8Array(12));
@@ -50,7 +58,7 @@ const encryptMsg = async (key, message) => {
  * @param {Uint8Array<ArrayBuffer>} ciphertext 
  * @returns 
  */
-const decryptMsg = async (AESkey, iv, ciphertext) => {
+export const decryptMsg = async (AESkey, iv, ciphertext) => {
     try {
         const decryptedMsg = await crypto.subtle.decrypt(
             {
@@ -68,8 +76,3 @@ const decryptMsg = async (AESkey, iv, ciphertext) => {
         return null;
     }
 }
-
-
-module.exports = { deriveAESKey, encryptMsg, decryptMsg };
-
-

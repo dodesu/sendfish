@@ -6,5 +6,6 @@ const loadComplete = () => {
 
     const deriveScale = diagonal / circle.scrollWidth;
     circle.style.transform = `scale(${deriveScale})`;
+    setTimeout(() => { document.querySelector('.loader').remove() }, 1000);
 }
 window.addEventListener('DOMContentLoaded', loadComplete);

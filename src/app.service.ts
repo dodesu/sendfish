@@ -1,12 +1,10 @@
 import { Injectable, Inject, Logger } from '@nestjs/common';
-import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Cache } from 'cache-manager';
+import { RedisService } from './modules/redis/redis.service';
 import { nanoid } from 'nanoid';
-import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AppService {
-  constructor(@Inject(CACHE_MANAGER) private readonly _cacheManager: Cache, public con: ConfigService) { };
+  constructor(private readonly _cacheManager: RedisService) { };
 
   async getKeyRedis(key: string) {
     try {
@@ -53,5 +51,13 @@ export class AppService {
       //generate again if UID duplicate.
     } while (valCheck != undefined);
     return cat_id;
+  }
+
+  async isExpired(cat_id: string) {
+    const val = await this._cacheManager.get(cat_id);
+    if (val) {
+      return false;
+    }
+    return true;
   }
 }

@@ -8,9 +8,22 @@ export class AppController {
 
   @Get()
   @Render('home')
-  getHome(@Req() Req: Request) {
+  async getHome(@Req() Req: Request) { }
 
-    return { isLoadInitJS: Req.signedCookies['cat_id'] === undefined };
+  @Get('api/id')
+  async getId(@Req() Req: Request, @Res() Res: Response) {
+    const cat_id = Req.signedCookies['cat_id'];
+    // Check cookie cat_id 
+    if (cat_id == undefined) {
+      return Res.json({ hasInit: false });
+    }
+    // Check redis cat_id
+    const is_expired = await this.appService.isExpired(cat_id);
+    if (is_expired) {
+      return Res.json({ hasInit: false }); //expired redis = no data 
+    }
+    return Res.json({ hasInit: true, catId: cat_id });
+
   }
 
   @Get('get')
@@ -29,10 +42,9 @@ export class AppController {
     const cat_id = await this.appService.savePublicKey(publicKey);
     Res.cookie('cat_id', cat_id, {
       httpOnly: true,
-      maxAge: 60 * 60 * 5 * 1000, //5h 
-      signed: true,
+      maxAge: 60 * 60 * 1000, //1h
+      signed: true, //if other domain, set to false
     });
-    console.log(`Cat id = ${cat_id}`);
     return Res.json({ cat_id });
   }
 
