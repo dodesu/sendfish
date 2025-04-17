@@ -5,17 +5,103 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sendfish</title>
+    <link rel="icon" href="/img/sendfish_logo.ico" type="image/x-icon">
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="stylesheet" href="/css/load.css">
 </head>
 
-<body>
-    <div class="loader">
+<body class="bg-gray-900 text-white font-sans">
+    <div id="loader" class="bg-gray-900">
         <div class="circle"></div>
         <img src="/img/Kikuri_load.png" alt="Kikuri load" class="load-img">
     </div>
 
-    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
-    <script type="module" src="/js/main.js"></script>
+    <!-- Sidebar -->
+    <div class="flex h-screen">
+        <aside class="w-64 bg-gray-800 p-4 space-y-4 border-r border-gray-700 hidden md:block">
+            <!-- Logo -->
+            <div class="text-2xl font-bold text-white mb-6 flex justify-center">🐟Sendfish</div>
+
+            <!-- Navigation -->
+            <nav class="space-y-2">
+                <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700">
+                    <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path
+                            d="M10 3a1 1 0 00-1 1v3H6a1 1 0 100 2h3v3a1 1 0 102 0V9h3a1 1 0 100-2h-3V4a1 1 0 00-1-1z" />
+                    </svg>
+                    <span>New Fish</span>
+                </a>
+                <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700">
+                    <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M4 4h12v12H4z" />
+                    </svg>
+                    <span>Waiting Fish</span>
+                </a>
+                <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700">
+                    <svg class="w-5 h-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10 2a8 8 0 00-5.29 13.99L4 18l2.01-.71A8 8 0 1010 2z" />
+                    </svg>
+                    <span>Fish</span>
+                </a>
+            </nav>
+
+            <!-- Footer -->
+            <div class="absolute bottom-4 w-56">
+                <div class="border-t border-gray-700 pt-4">
+                    <a href="#" class="flex items-center gap-2 text-sm text-gray-400 hover:text-white">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                            <path d="M15.75 9V5.25M8.25 9V5.25M3 11.25h18M4.5 11.25v8.25h15V11.25" />
+                        </svg>
+                        Settings
+                    </a>
+                </div>
+            </div>
+        </aside>
+
+        <main class="flex-1 relative flex flex-col justify-between p-6 overflow-hidden">
+            <!-- Chat messages -->
+            <div class="w-3/5 mx-auto space-y-3 overflow-y-auto max-h-[calc(100vh-120px)] pr-2 ">
+                <!-- Tin nhắn người khác -->
+                <div class="max-w-[75%] bg-gray-800 text-white p-3 rounded-xl">
+                    <span class="text-sm text-gray-300"></span>
+                    <p>Weh weh weh hhhhhhhhhhh</p>
+                </div>
+
+                <!-- Tin nhắn của bản thân -->
+                <div class="max-w-[75%] bg-gray-700 text-white p-3 rounded-xl ml-auto">
+                    <span class="text-sm text-white font-semibold"></span>
+                    <p>o ii a i o iii a i</p>
+                </div>
+
+                <!-- Tin nhắn người khác -->
+                <div class="max-w-[75%] bg-gray-800 text-white p-3 rounded-xl">
+                    <span class="text-sm text-gray-300"></span>
+                    <p>Chit chit chit</p>
+                </div>
+            </div>
+
+            <!-- Input box -->
+            <div class="mt-4 sticky bottom-0 bg-gray-900 pt-4 px-2 flex gap-2">
+                <form
+                    class="w-3/5 mx-auto relative bg-gray-800 rounded-2xl px-4 py-3 pt-4 flex items-end gap-2 shadow-md"
+                    id="chat-form">
+                    <!-- Textarea -->
+                    <textarea id="message-input" rows="3" placeholder="Nhập tin nhắn..."
+                        class="flex-1 bg-transparent text-white placeholder-gray-400 resize-none focus:outline-none overflow-y-auto max-h-32 pr-12 custom-scrollbar"></textarea>
+
+                    <!-- Button send -->
+                    <button type="submit"
+                        class="bg-gray-700 hover:bg-gray-600 text-white w-9 h-9 rounded-full flex items-center justify-center shadow-sm">
+                        <span class="text-lg font-bold">&gt;</span>
+                    </button>
+                </form>
+            </div>
+
+        </main>
+
+
+        <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+        <script type="module" src="/js/main.js"></script>
 
 </body>
 
