@@ -56,7 +56,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     handleStartPM(@MessageBody() data: { targetId: string }, @ConnectedSocket() catSocket: Socket) {
         const targetCat = this._activeCats.get(data.targetId);
         if (!targetCat) {
-            catSocket.to(catSocket.id).emit('error', { message: 'Target cat id not found!' });
+            catSocket.to(catSocket.id).emit('error', { type: 'error', message: 'Target cat id not found!' });
             return;
         }
 
@@ -67,8 +67,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         }
 
         const publicKey = this._redisService.get(data.targetId);
+        // Check if the public key is available
         if (!publicKey) {
-            catSocket.to(catSocket.id).emit('error', { message: 'Public key not found!' });
+            catSocket.to(catSocket.id).emit('error', { type: 'error', message: `Target's public key not found!` });
             return;
         }
         catSocket.join(roomId);
@@ -77,22 +78,23 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     @SubscribeMessage('sendFish')
     handleSendFish(@MessageBody() fish: Fish, @ConnectedSocket() catSocket: Socket) {
+
+        const { senderCat, receiverCat } = fish;
+        const roomId = `${[senderCat, receiverCat].sort().join('-')}`;
         // Check if data is valid
         if (!fish) {
             this.server
                 .to(catSocket.id)
-                .emit('error', { message: 'Invalid fish data!' });
+                .emit('sendFishStatus', { roomId: roomId, status: 'error', message: 'Invalid fish data!' });
             return;
         }
 
-        const { senderCat, receiverCat } = fish;
-        const roomId = `${[senderCat, receiverCat].sort().join('-')}`;
         const receiverCatSocket = this._activeCats.get(receiverCat)?.socketId;
         //Check if receiverCat is online
         if (!receiverCatSocket) {
             this.server
                 .to(catSocket.id)
-                .emit('error', { message: 'Receiver cat is not online!' });
+                .emit('sendFishStatus', { roomId: roomId, status: 'undelivered', message: 'Receiver cat is not online!' });
             return;
         }
 
@@ -107,8 +109,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         }
         this.server
             .to(receiverCatSocket)
-            .emit('sendFishStatus', { message: 'Delivered' });
+            .emit('sendFishStatus', { roomId: roomId, status: 'sent' });
     }
+
     private isSocketInRoom(roomId: string, senderCat: string, receiverCat?: string): boolean {
         const room = this.server.sockets.adapter.rooms.get(roomId);
         if (receiverCat) {

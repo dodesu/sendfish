@@ -12,8 +12,10 @@ try {
         }
 
     }
+    await import('/js/m/toast.js');
     // Proceed with WebSocket connection
     try {
+
         await import('/js/m/websocket.js');
         await import('/js/core.js');
     } catch (error) {

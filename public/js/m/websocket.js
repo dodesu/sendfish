@@ -1,4 +1,5 @@
 // import { io } from 'https://cdn.socket.io/4.0.1/socket.io.min.js';
+import { showToast } from "./toast.js";
 //Main method websocket
 export const ConnectSocket = (url = 'http://localhost:3003') => {
     let socket = null;
@@ -30,14 +31,14 @@ export const onConnected = (socket) => {
 };
 
 export const onError = (error) => {
-    console.error('Error ws:', error.message);
+    showToast(error.message, error.type || 'info');
 }
 
 export const onDisconnect = () => {
-    console.log('Conection was closed!');
+    showToast('Lost connection to the server. Trying to reconnect...', 'warning');
 }
-export const onSendFishStatus = (event) => {
-    console.log('sendFishStatus:', event.message);
+export const onSendFishStatus = (res) => {
+    console.log('sendFishStatus:', res.status);
 }
 
 export const onReceiveFish = (fish) => {
