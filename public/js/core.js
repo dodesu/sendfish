@@ -5,9 +5,7 @@ import {
     onError,
     onSendFishStatus,
     onReceiveFish,
-} from "./m/websocket.js";
-
-const socket = ConnectSocket();
+} from "./core/websocket.js";
 
 const setupSocketEvents = (socket) => {
     socket.on('connect', () => onConnected(socket));
@@ -17,4 +15,5 @@ const setupSocketEvents = (socket) => {
     socket.on('receiveFish', onReceiveFish);
 };
 
+const socket = ConnectSocket();
 setupSocketEvents(socket);

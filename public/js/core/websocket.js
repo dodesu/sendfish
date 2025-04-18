@@ -1,5 +1,5 @@
 // import { io } from 'https://cdn.socket.io/4.0.1/socket.io.min.js';
-import { showToast } from "./toast.js";
+import { showToast } from "../m/toast.js";
 //Main method websocket
 export const ConnectSocket = (url = 'http://localhost:3003') => {
     let socket = null;

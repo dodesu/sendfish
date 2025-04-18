@@ -4,7 +4,7 @@ try {
 
     if (!hasInit) {
         try {
-            await import('/js/m/keyPair.js');
+            await import('/js/core/keyPair.js');
             await import('/js/init.js');
         } catch (error) {
             console.error('Error importing keyPair or init:', error.message);
@@ -16,11 +16,19 @@ try {
     // Proceed with WebSocket connection
     try {
 
-        await import('/js/m/websocket.js');
+        await import('/js/core/websocket.js');
         await import('/js/core.js');
     } catch (error) {
         console.error('Error importing websocket or core:', error.message);
         throw new Error('WebSocket connection failed!');
+    }
+
+    // Proceed with chat functionality
+    try {
+        await import('/js/m/chat/index.js');
+    } catch (error) {
+        console.error('Error importing chat:', error.message);
+        throw new Error('Chat functionality failed!');
     }
 
 } catch (error) {

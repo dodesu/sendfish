@@ -4,7 +4,7 @@ import {
     // importPublicKey,
     // deriveSharedSecret,
     // base64Converter,
-} from './m/keyPair.js';
+} from './core/keyPair.js';
 
 (async function Init() {
 

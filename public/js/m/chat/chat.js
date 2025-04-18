@@ -4,7 +4,7 @@ import {
     // importPublicKey,
     // deriveSharedSecret,
     // base64Converter,
-} from './keyPair.js';
+} from '../../core/keyPair.js';
 
 /**
  * 
@@ -75,4 +75,9 @@ export const decryptMsg = async (AESkey, iv, ciphertext) => {
         console.error("Error decrypt:", error);
         return null;
     }
+}
+
+export const startPM = async (targetId) => {
+    console.log('startPM:', targetId);
+
 }
