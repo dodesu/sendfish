@@ -30,11 +30,8 @@
 }
 
 .custom-scrollbar {
-    width: 100%;
-    height: 100%;
-    padding-right: 16px;
     overflow-y: auto;
-    max-height: 128px;
+    scrollbar-gutter: stable;
 }
 
 /* Thin scrollbar */
@@ -51,7 +48,6 @@
 
 /* background scrollbar */
 .custom-scrollbar::-webkit-scrollbar-track {
-    background: #343d4e;
     border-radius: 9999px;
 }
 

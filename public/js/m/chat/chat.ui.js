@@ -1,5 +1,7 @@
 import { startPM } from "./chat.js";
 
+const chatBox = document.querySelector('#chat-box');
+
 export function newFishBasket(newBtn) {
     const currentSpan = document.querySelector('#span-new-fish');
     if (!currentSpan) return;
@@ -20,7 +22,12 @@ export function newFishBasket(newBtn) {
 
     input.addEventListener('keydown', function (e) {
         if (e.key === 'Enter') {
-            startPM(input.value);
+            if (input.value.trim() === '') {
+                showToast('Please enter a valid ID', 'warning');
+                return;
+            }
+
+            startPM(input.value.trim());
             save();
         }
     });
@@ -35,4 +42,11 @@ export function newFishBasket(newBtn) {
     });
     newBtn.replaceChild(input, currentSpan);
     input.focus();
+}
+
+export const onStartPM = (res) => {
+    history.pushState({}, '', `/c/${res.roomId}`);
+    // Update the URL without reloading the page
+    const publicKey = res.publicKey;
+    localStorage.setItem('roomId', publicKey);
 }

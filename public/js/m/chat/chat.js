@@ -5,7 +5,7 @@ import {
     // deriveSharedSecret,
     // base64Converter,
 } from '../../core/keyPair.js';
-
+import { socket } from '../../core.js';
 /**
  * 
  * @param {ArrayBuffer} sharedSecret 
@@ -78,6 +78,6 @@ export const decryptMsg = async (AESkey, iv, ciphertext) => {
 }
 
 export const startPM = async (targetId) => {
-    console.log('startPM:', targetId);
-
+    console.log('startPM', targetId);
+    socket.emit('startPM', { targetId: targetId });
 }
