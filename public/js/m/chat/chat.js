@@ -1,11 +1,10 @@
 import {
-    generateECDHKeyPair,
-    exportPublicKey,
-    // importPublicKey,
-    // deriveSharedSecret,
-    // base64Converter,
+    importPublicKey,
+    deriveSharedSecret,
+    base64Converter,
 } from '../../core/keyPair.js';
 import { socket } from '../../core.js';
+import { showToast } from '../toast.js';
 /**
  * 
  * @param {ArrayBuffer} sharedSecret 
@@ -42,8 +41,8 @@ export const encryptMsg = async (key, message) => {
         );
 
         return {
-            iv: iv,
-            ciphertext: new Uint8Array(ciphertext)
+            iv: base64Converter(iv),
+            ciphertext: base64Converter(ciphertext)
         };
     } catch (error) {
         console.error("Error encrypt:", error);
@@ -58,15 +57,19 @@ export const encryptMsg = async (key, message) => {
  * @param {Uint8Array<ArrayBuffer>} ciphertext 
  * @returns 
  */
-export const decryptMsg = async (AESkey, iv, ciphertext) => {
+export const decryptMsg = async (AESkey, fish) => {
+    const { iv, ciphertext } = fish;
+    //Decoding base64 to ArrayBuffer
+    const decodedIv = base64Converter(iv, false);
+    const decodedCiphertext = base64Converter(ciphertext, false);
     try {
         const decryptedMsg = await crypto.subtle.decrypt(
             {
                 name: "AES-GCM",
-                iv: iv // iv used to encrypt
+                iv: decodedIv // iv used to encrypt
             },
             AESkey,
-            ciphertext
+            decodedCiphertext
         );
 
         // Convert the decoded ArrayBuffer to a plain text
@@ -80,4 +83,16 @@ export const decryptMsg = async (AESkey, iv, ciphertext) => {
 export const startPM = async (targetId) => {
     console.log('startPM', targetId);
     socket.emit('startPM', { targetId: targetId });
+}
+
+export const saveSharedSecret = async (targetPublicKey, roomId) => {
+    try {
+        const myPrivateKey = localStorage.getItem('privateKey');
+        const importedPublicKey = await importPublicKey(targetPublicKey);
+        const sharedSecret = await deriveSharedSecret(myPrivateKey, importedPublicKey);
+        localStorage.setItem(roomId, sharedSecret);
+    } catch (error) {
+        showToast('Error generating shared secret', 'error');
+        console.error("Error generating shared secret:", error);
+    }
 }
