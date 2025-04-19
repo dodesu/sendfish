@@ -66,3 +66,32 @@ export const deriveSharedSecret = async (ownPrivateKey, otherPublicKey) => {
     );
     return base64Converter(sharedSecret);
 }
+
+/**
+ *  Import the private key from local storage.
+ * @param {stringify} privateKey 
+ * @returns {jwk} CryptoKey
+ */
+export const importPrivateKey = async (privateKey) => {
+    const jwk = JSON.parse(privateKey);
+    return await crypto.subtle.importKey(
+        "jwk",
+        jwk,
+        {
+            name: "ECDH",
+            namedCurve: "P-256"
+        },
+        true, // extractable
+        ["deriveKey"]
+    );
+}
+
+/**
+ * Save the private key to local storage.
+ * @param {CryptoKey} privateKey 
+ * @returns {stringify} privateKey
+ */
+export const exportPrivateKey = async (privateKey) => {
+    const exported = await crypto.subtle.exportKey("jwk", privateKey);
+    return JSON.stringify(exported);
+}

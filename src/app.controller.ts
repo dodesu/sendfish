@@ -38,8 +38,8 @@ export class AppController {
    * @returns 
    */
   @Post('api/init') //TODO: should set token 
-  async init(@Body() publicKey: string, @Res() Res: Response) {
-    const cat_id = await this.appService.savePublicKey(publicKey);
+  async init(@Body() data: { publicKey: string }, @Res() Res: Response) {
+    const cat_id = await this.appService.savePublicKey(data.publicKey);
     Res.cookie('cat_id', cat_id, {
       httpOnly: true,
       maxAge: 60 * 60 * 1000, //1h
