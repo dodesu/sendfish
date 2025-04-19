@@ -7,7 +7,28 @@
     <title>Sendfish</title>
     <link rel="icon" href="/img/sendfish_logo.ico" type="image/x-icon">
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- Fixme: shouldn't use cdn -->
     <link rel="stylesheet" href="/css/load.css">
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .fish-left {
+                @apply flex flex-col items-start gap-1;
+            }
+            .fish-right {
+                @apply flex flex-col items-end gap-1;
+            }
+            .bubble-left {
+                @apply max-w-[75%] bg-gray-800 text-white py-3 px-4 rounded-3xl;
+            }
+
+            .bubble-right {
+                @apply max-w-[75%] bg-gray-700 text-white py-3 px-4 rounded-3xl ml-auto;
+            }
+            .bubble-status {
+                @apply text-xs text-gray-500 pr-2; 
+            }
+        }
+    </style>
 </head>
 
 <body class="bg-gray-900 text-white font-sans">
@@ -26,7 +47,9 @@
     <div class="flex h-screen text-sm">
         <aside class="w-64 bg-gray-800 p-4 space-y-4 border-r border-gray-700 hidden md:block">
             <!-- Logo -->
-            <div class="text-2xl font-bold text-red-700 mb-6 flex justify-center">🐟Sendfish</div>
+            <div class="text-2xl font-bold text-red-700 mb-6 flex justify-center">
+                <a href="/">🐟Sendfish</a>
+            </div>
 
             <!-- Navigation -->
             <nav class="space-y-2 font-medium">
@@ -46,18 +69,28 @@
                 </a>
 
                 <a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700 cursor-pointer">
-                    <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                    <svg width="24" height="24" class="text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M4 4h12v12H4z" />
                     </svg>
                     <span class="px-2 py-1 w-full">Waiting Fish</span>
                 </a>
 
-                <a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700 cursor-pointer">
-                    <svg class="w-5 h-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                <div class="flex items-center gap-3 px-3 py-2 rounded-lg">
+                    <svg width="24" height="24" class="text-blue-400" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M10 2a8 8 0 00-5.29 13.99L4 18l2.01-.71A8 8 0 1010 2z" />
                     </svg>
                     <span class="px-2 py-1 w-full">Fish</span>
+                </div>
+
+                <a class="flex flex-col items-center gap-3 px-3 py-2 rounded-lg">
+                    <div class="hover:bg-gray-700 w-full px-2 py-1 rounded-md cursor-pointer">AGeNTXA-6M</div>
+                    <div class="hover:bg-gray-700 w-full px-2 py-1 rounded-md cursor-pointer">AGeNTXA-6M</div>
+                    <div class="hover:bg-gray-700 w-full px-2 py-1 rounded-md cursor-pointer">AGeNTXA-6M</div>
+
+                    <div class="hover:bg-gray-700 w-full px-2 py-1 rounded-md cursor-pointer">AGeNTXA-6M</div>
+
                 </a>
+
             </nav>
 
             <!-- Footer -->
@@ -73,30 +106,39 @@
             </div>
         </aside>
 
-        <main class="flex-1 relative flex flex-col justify-between p-6 overflow-hidden">
-            <!-- Chat messages -->
-            <div class="w-3/5 mx-auto space-y-3 overflow-y-auto max-h-[calc(100vh-120px)] pr-2 ">
-                <!-- Tin nhắn người khác -->
-                <div class="max-w-[75%] bg-gray-800 text-white p-3 rounded-xl">
-                    <span class="text-sm text-gray-300"></span>
-                    <p>Weh weh weh hhhhhhhhhhh</p>
-                </div>
+        <main class="flex-1 relative flex flex-col justify-between pb-6 p-0 overflow-hidden ">
+            <div id="chat-wrapper" class="w-full custom-scrollbar pb-6">
+                <!-- Chat messages -->
+                <div id="chat-box" class="w-3/5 mx-auto space-y-3">
+                    <!-- Tin nhắn người khác -->
+                    <div class="fish-left">
+                        <!-- Bubble -->
+                        <div class="bubble-left">
+                            <p>Weh weh weh hhhhhhhhhhh</p>
+                        </div>
+                    </div>
 
-                <!-- Tin nhắn của bản thân -->
-                <div class="max-w-[75%] bg-gray-700 text-white p-3 rounded-xl ml-auto">
-                    <span class="text-sm text-white font-semibold"></span>
-                    <p>o ii a i o iii a i</p>
-                </div>
+                    <!-- Tin nhắn của bản thân -->
+                    <div class="fish-right">
+                        <div class="bubble-right">
+                            <!-- <span class="text-sm text-white font-semibold"></span> -->
+                            <p>O III ii a i o iii a i o ii a i o iii a i</p>
 
-                <!-- Tin nhắn người khác -->
-                <div class="max-w-[75%] bg-gray-800 text-white p-3 rounded-xl">
-                    <span class="text-sm text-gray-300"></span>
-                    <p>Chit chit chit</p>
+                        </div>
+                        <span class="bubble-status">Delivered</span>
+                    </div>
+                    <!-- Tin nhắn người khác -->
+                    <div class="fish-left">
+                        <div class="bubble-left">
+                            <!-- <span class="text-sm text-gray-300"></span> -->
+                            <p>Chit chit chit</p>
+                        </div>
+                    </div>
+
                 </div>
             </div>
-
             <!-- Input box -->
-            <div class="mt-4 sticky bottom-0 bg-gray-900 pt-4 px-2 flex gap-2">
+            <div class="sticky bottom-0 bg-gray-900 p-0 m-0 flex gap-2">
                 <form
                     class="w-3/5 mx-auto relative bg-gray-800 rounded-2xl px-4 py-3 pt-4 flex items-end gap-2 shadow-md"
                     id="chat-form">
