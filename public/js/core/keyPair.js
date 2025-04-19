@@ -15,11 +15,11 @@ export const generateECDHKeyPair = async () => {
 /**
  * Encode SPKI public key to base64, and vice versa (with 2nd param). 
  * @param {ArrayBuffer|Base64} value 
- * @param {boolean} isDecode 
+ * @param {boolean} isEncode
  * @returns 
  */
-export const base64Converter = (value, isDecode = true) => {
-    if (isDecode) {
+export const base64Converter = (value, isEncode = true) => {
+    if (isEncode) {
         return btoa(String.fromCharCode(...new Uint8Array(value)));
     }
 
