@@ -4,18 +4,21 @@ import { startPM, generateSharedAESKey } from "./chat.js";
 
 const UI = {
     newBtn: document.querySelector('#new-fish'),
-    chatBox: document.querySelector('#chat-box'),
+    fishTank: document.querySelector('#fish-tank'),
     catId: document.querySelector('#cat-id'),
     basketTitle: document.querySelector('#basket-title'),
     fishInput: document.querySelector('#fish-input'),
+    fishWrapper: document.querySelector('#fish-wrapper'),
+    fishTank: document.querySelector('#fish-tank'),
 };
 
 export const InitUI = () => {
     UI.newBtn.addEventListener('click', newFishBasket);
+    // Display the cat ID in the UI
     UI.catId.querySelector('span').textContent =
         `CAT ID: ${localStorage.getItem('catId')}` || 'Unknown Cat ID';
+    UI.fishInput.addEventListener('keydown', handleSendMessage);
 }
-
 
 function newFishBasket() {
     const currentSpan = document.querySelector('#span-new-fish');
@@ -69,8 +72,45 @@ export const handleStartPMStatus = (res) => {
         return;
     }
 
-    UI.chatBox.innerHTML = '';
+    UI.fishTank.innerHTML = '';
     UI.basketTitle.textContent = res.receiveCat;
     UI.fishInput.focus();
     showToast('New chat started!', 'success');
+}
+
+const handleSendMessage = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        const { fishInput, fishTank, fishWrapper } = UI;
+        const fish_text = fishInput.value.trim();
+
+
+
+        // Create a new div for fish message
+        const fishDiv = document.createElement('div');
+        fishDiv.className = "fish-right";
+
+        const bubble = document.createElement('div');
+        bubble.className = "bubble-right";
+
+
+        const fishText = document.createElement('p');
+        fishText.textContent = fish_text;
+
+        const status = document.createElement('span');
+        status.className = "bubble-status";
+        status.textContent = "Delivered";
+
+        bubble.appendChild(fishText);
+        fishDiv.appendChild(bubble);
+        fishDiv.appendChild(status);
+
+        // Add the new fish message to the chat box
+        fishTank.appendChild(fishDiv);
+
+        // Clear the input field
+        fishInput.value = '';
+        // Scroll to the bottom of the chat box
+        fishWrapper.scrollTop = fishWrapper.scrollHeight;
+    }
 }
