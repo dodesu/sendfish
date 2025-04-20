@@ -95,6 +95,7 @@ const handleSendMessage = (e) => {
 
 
         const fishText = document.createElement('p');
+        fishText.className = "fish-text";
         fishText.textContent = fish_text;
 
         const status = document.createElement('span');
