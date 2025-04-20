@@ -53,46 +53,54 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
 
     @SubscribeMessage('startPM')
-    handleStartPM(@MessageBody() data: { targetId: string }, @ConnectedSocket() catSocket: Socket) {
-        const targetCat = this._activeCats.get(data.targetId);
+    async handleStartPM(@MessageBody() data: { senderCat: string, receiveCat: string }, @ConnectedSocket() catSocket: Socket) {
+        const { senderCat, receiveCat } = data;
+        const targetCat = this._activeCats.get(receiveCat);
         if (!targetCat) {
-            catSocket.to(catSocket.id).emit('error', { message: 'Target cat id not found!' });
+            this.server.to(catSocket.id).emit('error', { type: 'error', message: 'Target cat id not found!' });
             return;
         }
 
-        const roomId = `${[catSocket.id, data.targetId].sort().join('-')}`;
+        const roomId = `${[senderCat, receiveCat].sort().join('-')}`;
         if (catSocket.rooms.has(roomId)) {
             // If the room already exists, no need to join again
-            return;
+            return this.server
+                .to(catSocket.id)
+                .emit('error', {
+                    type: 'info',
+                    message: 'This cat id is already in your fish basket list'
+                });
         }
 
-        const publicKey = this._redisService.get(data.targetId);
+        const publicKey = await this._redisService.get(receiveCat);
+        // Check if the public key is available
         if (!publicKey) {
-            catSocket.to(catSocket.id).emit('error', { message: 'Public key not found!' });
+            this.server.to(catSocket.id).emit('error', { type: 'error', message: `Target's public key not found!` });
             return;
         }
         catSocket.join(roomId);
-        catSocket.to(catSocket.id).emit('startPM', { roomId, publicKey });
+        this.server.to(catSocket.id).emit('startPMStatus', { roomId, publicKey, receiveCat });
     }
 
     @SubscribeMessage('sendFish')
     handleSendFish(@MessageBody() fish: Fish, @ConnectedSocket() catSocket: Socket) {
+
+        const { senderCat, receiverCat } = fish;
+        const roomId = `${[senderCat, receiverCat].sort().join('-')}`;
         // Check if data is valid
         if (!fish) {
             this.server
                 .to(catSocket.id)
-                .emit('error', { message: 'Invalid fish data!' });
+                .emit('sendFishStatus', { roomId: roomId, status: 'error', message: 'Invalid fish data!' });
             return;
         }
 
-        const { senderCat, receiverCat } = fish;
-        const roomId = `${[senderCat, receiverCat].sort().join('-')}`;
         const receiverCatSocket = this._activeCats.get(receiverCat)?.socketId;
         //Check if receiverCat is online
         if (!receiverCatSocket) {
             this.server
                 .to(catSocket.id)
-                .emit('error', { message: 'Receiver cat is not online!' });
+                .emit('sendFishStatus', { roomId: roomId, status: 'undelivered', message: 'Receiver cat is not online!' });
             return;
         }
 
@@ -105,10 +113,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         } else {
             this.server.to(receiverCatSocket).emit('wattingFish', fish);
         }
+        // Notify the sender that the fish has been sent
         this.server
             .to(receiverCatSocket)
-            .emit('sendFishStatus', { message: 'Delivered' });
+            .emit('sendFishStatus', { roomId: roomId, status: 'sent' });
     }
+
     private isSocketInRoom(roomId: string, senderCat: string, receiverCat?: string): boolean {
         const room = this.server.sockets.adapter.rooms.get(roomId);
         if (receiverCat) {

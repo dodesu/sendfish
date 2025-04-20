@@ -30,11 +30,8 @@
 }
 
 .custom-scrollbar {
-    width: 100%;
-    height: 100%;
-    padding-right: 16px;
     overflow-y: auto;
-    max-height: 128px;
+    scrollbar-gutter: stable;
 }
 
 /* Thin scrollbar */
@@ -51,7 +48,6 @@
 
 /* background scrollbar */
 .custom-scrollbar::-webkit-scrollbar-track {
-    background: #343d4e;
     border-radius: 9999px;
 }
 
@@ -59,4 +55,13 @@
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background-color: #2d3541;
     cursor: default;
+}
+
+.welcome-text {
+    padding: 0;
+    font-size: 3rem;
+    font-weight: 700;
+    background: radial-gradient(circle, rgba(238, 174, 202, 1) 13%, rgba(148, 187, 233, 1) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }

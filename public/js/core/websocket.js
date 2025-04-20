@@ -1,4 +1,5 @@
 // import { io } from 'https://cdn.socket.io/4.0.1/socket.io.min.js';
+import { showToast } from "../m/toast.js";
 //Main method websocket
 export const ConnectSocket = (url = 'http://localhost:3003') => {
     let socket = null;
@@ -19,9 +20,21 @@ export const sendFish = (socket, data) => {
 }
 
 
+
+/**
+ *  Initialize WebSocket basic events
+ * @param {Socket} socket 
+ */
+export const InitEvents = (socket) => {
+    socket.on('connect', () => onConnected(socket));
+    socket.on('disconnect', onDisconnect);
+    socket.on('error', onError);
+}
+
+
 // Event callbacks
-export const onConnected = (socket) => {
-    console.log('Kết nối thành công!');
+const onConnected = (socket) => {
+    console.log('Connected to the server!');
     const catId = localStorage.getItem('catId');
     if (!catId) {
         throw new Error('catId not found in localStorage');
@@ -29,17 +42,10 @@ export const onConnected = (socket) => {
     socket.emit('register', { catId: localStorage.getItem('catId') });
 };
 
-export const onError = (error) => {
-    console.error('Error ws:', error.message);
+const onError = (error) => {
+    showToast(error.message, error.type || 'info');
 }
 
-export const onDisconnect = () => {
-    console.log('Conection was closed!');
-}
-export const onSendFishStatus = (event) => {
-    console.log('sendFishStatus:', event.message);
-}
-
-export const onReceiveFish = (fish) => {
-    console.log('receiveFish:', fish);
+const onDisconnect = () => {
+    showToast('Lost connection to the server. Trying to reconnect...', 'warning');
 }

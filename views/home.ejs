@@ -7,42 +7,97 @@
     <title>Sendfish</title>
     <link rel="icon" href="/img/sendfish_logo.ico" type="image/x-icon">
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- Fixme: shouldn't use cdn -->
     <link rel="stylesheet" href="/css/load.css">
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .fish-left {
+                @apply flex flex-col items-start gap-1;
+            }
+            .fish-right {
+                @apply flex flex-col items-end gap-1;
+            }
+            .bubble-left {
+                @apply max-w-[75%] bg-gray-800 text-white py-3 px-4 rounded-3xl;
+            }
+
+            .bubble-right {
+                @apply max-w-[75%] bg-gray-700 text-white py-3 px-4 rounded-3xl ml-auto;
+            }
+            .bubble-status {
+                @apply text-xs text-gray-500 pr-2; 
+            }
+            .cat-id {
+                @apply w-3/5 mx-auto py-2 flex justify-center items-center gap-2 text-neutral-300;
+            }
+            .basket-title {
+                @apply flex text-center font-semibold p-6 text-base;
+            }
+        }
+    </style>
 </head>
 
 <body class="bg-gray-900 text-white font-sans">
+    <!-- Loading screen -->
     <div id="loader" class="bg-gray-900">
         <div class="circle"></div>
         <img src="/img/Kikuri_load.png" alt="Kikuri load" class="load-img">
     </div>
 
-    <!-- Sidebar -->
-    <div class="flex h-screen">
+
+    <!-- Error notification -->
+    <div id="toast-container"
+        class="fixed top-5 left-1/2 transform -translate-x-1/2 z-50 flex flex-col items-center space-y-2"></div>
+
+
+    <div class="flex h-screen text-sm">
+        <!-- Sidebar -->
         <aside class="w-64 bg-gray-800 p-4 space-y-4 border-r border-gray-700 hidden md:block">
             <!-- Logo -->
-            <div class="text-2xl font-bold text-white mb-6 flex justify-center">🐟Sendfish</div>
+            <div class="text-2xl font-bold text-red-700 mb-6 flex justify-center">
+                <a href="/">🐟Sendfish</a>
+            </div>
 
             <!-- Navigation -->
             <nav class="space-y-2">
-                <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700">
-                    <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                <a id="new-fish" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700 cursor-pointer">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round"
+                        class="lucide lucide-package-plus-icon lucide-package-plus">
+                        <path d="M16 16h6" />
+                        <path d="M19 13v6" />
                         <path
-                            d="M10 3a1 1 0 00-1 1v3H6a1 1 0 100 2h3v3a1 1 0 102 0V9h3a1 1 0 100-2h-3V4a1 1 0 00-1-1z" />
+                            d="M21 10V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l2-1.14" />
+                        <path d="m7.5 4.27 9 5.15" />
+                        <polyline points="3.29 7 12 12 20.71 7" />
+                        <line x1="12" x2="12" y1="22" y2="12" />
                     </svg>
-                    <span>New Fish</span>
+                    <span id="span-new-fish" class="px-2 py-1 w-full">New Fish Basket</span>
                 </a>
-                <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700">
-                    <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+
+                <a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700 cursor-pointer">
+                    <svg width="24" height="24" class="text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M4 4h12v12H4z" />
                     </svg>
-                    <span>Waiting Fish</span>
+                    <span class="px-2 py-1 w-full">Waiting Fish</span>
                 </a>
-                <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700">
-                    <svg class="w-5 h-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+
+                <div class="flex items-center gap-3 px-3 py-2 rounded-lg">
+                    <svg width="24" height="24" class="text-blue-400" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M10 2a8 8 0 00-5.29 13.99L4 18l2.01-.71A8 8 0 1010 2z" />
                     </svg>
-                    <span>Fish</span>
+                    <span class="px-2 py-1 w-full">Fish Basket List</span>
+                </div>
+
+                <a class="flex flex-col items-center gap-3 px-3 py-2 rounded-lg">
+                    <div class="hover:bg-gray-700 w-full px-2 py-1 rounded-md cursor-pointer">AGeNTXA-6M</div>
+                    <div class="hover:bg-gray-700 w-full px-2 py-1 rounded-md cursor-pointer">AGeNTXA-6M</div>
+                    <div class="hover:bg-gray-700 w-full px-2 py-1 rounded-md cursor-pointer">AGeNTXA-6M</div>
+
+                    <div class="hover:bg-gray-700 w-full px-2 py-1 rounded-md cursor-pointer">AGeNTXA-6M</div>
+
                 </a>
+
             </nav>
 
             <!-- Footer -->
@@ -58,35 +113,24 @@
             </div>
         </aside>
 
-        <main class="flex-1 relative flex flex-col justify-between p-6 overflow-hidden">
-            <!-- Chat messages -->
-            <div class="w-3/5 mx-auto space-y-3 overflow-y-auto max-h-[calc(100vh-120px)] pr-2 ">
-                <!-- Tin nhắn người khác -->
-                <div class="max-w-[75%] bg-gray-800 text-white p-3 rounded-xl">
-                    <span class="text-sm text-gray-300"></span>
-                    <p>Weh weh weh hhhhhhhhhhh</p>
-                </div>
-
-                <!-- Tin nhắn của bản thân -->
-                <div class="max-w-[75%] bg-gray-700 text-white p-3 rounded-xl ml-auto">
-                    <span class="text-sm text-white font-semibold"></span>
-                    <p>o ii a i o iii a i</p>
-                </div>
-
-                <!-- Tin nhắn người khác -->
-                <div class="max-w-[75%] bg-gray-800 text-white p-3 rounded-xl">
-                    <span class="text-sm text-gray-300"></span>
-                    <p>Chit chit chit</p>
+        <main class="flex-1 relative flex flex-col justify-between p-0 overflow-hidden ">
+            <div id="chat-wrapper" class="w-full custom-scrollbar pb-6">
+                <!-- Chat title -->
+                <div id="basket-title" class="basket-title"></div>
+                <!-- Chat messages -->
+                <div id="chat-box" class="w-3/5 mx-auto space-y-3">
+                    <h1 class="welcome-text flex justify-center mt-50">
+                        Meow moeow!
+                    </h1>
                 </div>
             </div>
-
             <!-- Input box -->
-            <div class="mt-4 sticky bottom-0 bg-gray-900 pt-4 px-2 flex gap-2">
+            <div class="sticky bottom-0 bg-gray-900 p-0 m-0 flex flex-col">
                 <form
                     class="w-3/5 mx-auto relative bg-gray-800 rounded-2xl px-4 py-3 pt-4 flex items-end gap-2 shadow-md"
                     id="chat-form">
                     <!-- Textarea -->
-                    <textarea id="message-input" rows="3" placeholder="Nhập tin nhắn..."
+                    <textarea id="fish-input" rows="3" placeholder="Enter a fish..."
                         class="flex-1 bg-transparent text-white placeholder-gray-400 resize-none focus:outline-none overflow-y-auto max-h-32 pr-12 custom-scrollbar"></textarea>
 
                     <!-- Button send -->
@@ -95,8 +139,12 @@
                         <span class="text-lg font-bold">&gt;</span>
                     </button>
                 </form>
+                <!-- Cat ID -->
+                <div id="cat-id" class="cat-id">
+                    <img src="\img\cat_id.gif" alt="cat gif" class="w-8 h-8" />
+                    <span>CAT ID: Something wrong!</span>
+                </div>
             </div>
-
         </main>
 
 
