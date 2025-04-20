@@ -1,8 +1,49 @@
+export async function InitECDH() {
+
+    const KEY_PAIR = await generateECDHKeyPair();//the first time visit web
+
+    const privateKey = await exportPrivateKey(KEY_PAIR.privateKey);
+    const publicKey = await exportPublicKey(KEY_PAIR.publicKey);
+
+    try {
+
+        //Send public key to server
+        const res = await fetch('/api/init', {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                publicKey: publicKey
+            }), //send base64 of public key
+        })
+
+        //Check 
+        if (!res.ok) {
+            const errorData = await res.json();
+            throw new Error(errorData.message || 'Error Init from server!');
+        }
+
+        const data = await res.json();
+        //reuse in other tab or reload
+        console.log(`ID = ${data.cat_id}`);
+        localStorage.setItem('publicKey', publicKey);
+        localStorage.setItem('privateKey', privateKey);
+        localStorage.setItem('catId', data.cat_id);
+        //Fix: Crypt private key before storage it(IndexedDB instead).
+    } catch (error) {
+        throw error;
+    }
+    //Next: Connect to websocket
+}
+
+
 /**
  * 
  * @returns {Promise<CryptoKeyPair>} ECDHKeyPair to exchange, derive ASE key 
  */
-export const generateECDHKeyPair = async () => {
+const generateECDHKeyPair = async () => {
     const keyPair = await crypto.subtle.generateKey(
         {
             name: "ECDH",
@@ -56,7 +97,7 @@ export const importPublicKey = async base64Key => {
  * Base64's secret key has derived the exchanged public key.
  * @param {*} ownPrivateKey 
  * @param {*} otherPublicKey 
- * @returns Base64 sharedSecret.
+ * @returns {ArrayBuffer} sharedSecret.
  */
 export const deriveSharedSecret = async (ownPrivateKey, otherPublicKey) => {
     const sharedSecret = await crypto.subtle.deriveBits(
@@ -64,7 +105,7 @@ export const deriveSharedSecret = async (ownPrivateKey, otherPublicKey) => {
         ownPrivateKey,
         256
     );
-    return base64Converter(sharedSecret);
+    return sharedSecret;
 }
 
 /**
@@ -82,7 +123,7 @@ export const importPrivateKey = async (privateKey) => {
             namedCurve: "P-256"
         },
         true, // extractable
-        ["deriveKey"]
+        ["deriveKey", "deriveBits"]
     );
 }
 

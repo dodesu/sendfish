@@ -53,27 +53,33 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
 
     @SubscribeMessage('startPM')
-    async handleStartPM(@MessageBody() data: { targetId: string }, @ConnectedSocket() catSocket: Socket) {
-        const targetCat = this._activeCats.get(data.targetId);
+    async handleStartPM(@MessageBody() data: { senderCat: string, receiveCat: string }, @ConnectedSocket() catSocket: Socket) {
+        const { senderCat, receiveCat } = data;
+        const targetCat = this._activeCats.get(receiveCat);
         if (!targetCat) {
             this.server.to(catSocket.id).emit('error', { type: 'error', message: 'Target cat id not found!' });
             return;
         }
 
-        const roomId = `${[catSocket.id, data.targetId].sort().join('-')}`;
+        const roomId = `${[senderCat, receiveCat].sort().join('-')}`;
         if (catSocket.rooms.has(roomId)) {
             // If the room already exists, no need to join again
-            return;
+            return this.server
+                .to(catSocket.id)
+                .emit('error', {
+                    type: 'info',
+                    message: 'This cat id is already in your fish basket list'
+                });
         }
 
-        const publicKey = await this._redisService.get(data.targetId);
+        const publicKey = await this._redisService.get(receiveCat);
         // Check if the public key is available
         if (!publicKey) {
             this.server.to(catSocket.id).emit('error', { type: 'error', message: `Target's public key not found!` });
             return;
         }
         catSocket.join(roomId);
-        catSocket.to(catSocket.id).emit('startPM', { roomId, publicKey });
+        this.server.to(catSocket.id).emit('startPMStatus', { roomId, publicKey, receiveCat });
     }
 
     @SubscribeMessage('sendFish')

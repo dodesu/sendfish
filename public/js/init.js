@@ -5,7 +5,7 @@ import {
     // importPublicKey,
     // deriveSharedSecret,
     // base64Converter,
-} from './core/keyPair.js';
+} from './core/ECDHkeypair.js';
 
 (async function Init() {
 

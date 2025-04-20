@@ -7,7 +7,7 @@ import {
     onReceiveFish,
 } from "./core/websocket.js";
 
-import { onStartPM } from "./m/chat/chat.ui.js";
+import { onStartPMStatus } from "./m/chat/chat.ui.js";
 
 const setupSocketEvents = (socket) => {
     socket.on('connect', () => onConnected(socket));
@@ -15,7 +15,7 @@ const setupSocketEvents = (socket) => {
     socket.on('error', onError);
     socket.on('sendFishStatus', onSendFishStatus);
     socket.on('receiveFish', onReceiveFish);
-    socket.on('startPM',);
+    socket.on('startPMStatus', onStartPMStatus);
 };
 
 export const socket = ConnectSocket();

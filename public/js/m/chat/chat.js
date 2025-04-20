@@ -2,22 +2,28 @@ import {
     importPublicKey,
     deriveSharedSecret,
     base64Converter,
-} from '../../core/keyPair.js';
-import { socket } from '../../core.js';
-import { showToast } from '../toast.js';
+    importPrivateKey,
+} from '../../core/ECDHkeypair.js';
+let socket;
+
+export const setSocket = (s) => {
+    socket = s;
+}
+
 /**
  * 
  * @param {ArrayBuffer} sharedSecret 
- * @returns 
+ * @returns {string} AES key in base64 format.
  */
 export const deriveAESKey = async (sharedSecret) => {
-    return await crypto.subtle.importKey(
+    const AESKey = await crypto.subtle.importKey(
         "raw",
         sharedSecret,
         { name: "AES-GCM", length: 256 },
         false,
         ["encrypt", "decrypt"]
     );
+    return base64Converter(AESKey);
 }
 
 /**
@@ -80,19 +86,41 @@ export const decryptMsg = async (AESkey, fish) => {
     }
 }
 
-export const startPM = async (targetId) => {
-    console.log('startPM', targetId);
-    socket.emit('startPM', { targetId: targetId });
+export const startPM = async (receiveCat) => {
+    const senderCat = localStorage.getItem('catId');
+    console.log('startPM', receiveCat);
+    socket.emit('startPM', { senderCat: senderCat, receiveCat: receiveCat });
 }
 
-export const saveSharedSecret = async (targetPublicKey, roomId) => {
+/**
+ *  * Generate a shared AES key using the server's response. And save it in localStorage.
+ * @param {*} res Response from server. Event: startPM
+ * @param {string} res.roomId Room ID for the chat.
+ * @param {string} res.publicKey Public key of the other user.
+ * @returns {string} AES key in base64 format.
+ */
+export const generateSharedAESKey = async (res) => {
+    const { roomId, publicKey } = res;
+
     try {
-        const myPrivateKey = localStorage.getItem('privateKey');
-        const importedPublicKey = await importPublicKey(targetPublicKey);
-        const sharedSecret = await deriveSharedSecret(myPrivateKey, importedPublicKey);
-        localStorage.setItem(roomId, sharedSecret);
+        if (!roomId || !publicKey) {
+            throw new Error("Invalid roomId or publicKey. Error from server.");
+        }
+        localStorage.setItem(roomId, publicKey);
+        // Save the public key in localStorage for later use. If the user refreshes the page, we can still access it.
+        const myPrivateKey = localStorage.getItem('privateKey'); //stringify
+        if (!myPrivateKey) {
+            throw new Error("Private key not found in localStorage.");
+        }
+        // Convert to CryptoKey object
+        const myPrivateKeyObj = await importPrivateKey(myPrivateKey);
+        const publicKeyObj = await importPublicKey(publicKey);
+        const sharedSecret = await deriveSharedSecret(myPrivateKeyObj, publicKeyObj);
+        // Generate AES key from the shared secret
+        const AESkey = await deriveAESKey(sharedSecret);
+        localStorage.setItem(roomId, AESkey);
+        return AESkey; // Return the AES key for further use
     } catch (error) {
-        showToast('Error generating shared secret', 'error');
-        console.error("Error generating shared secret:", error);
+        throw error; // Rethrow the error for further handling
     }
 }

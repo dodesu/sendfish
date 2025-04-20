@@ -27,6 +27,12 @@
             .bubble-status {
                 @apply text-xs text-gray-500 pr-2; 
             }
+            .cat-id {
+                @apply w-3/5 mx-auto py-2 flex justify-center items-center gap-2 text-neutral-300;
+            }
+            .basket-title {
+                @apply flex text-center font-semibold p-6 text-base;
+            }
         }
     </style>
 </head>
@@ -43,8 +49,9 @@
     <div id="toast-container"
         class="fixed top-5 left-1/2 transform -translate-x-1/2 z-50 flex flex-col items-center space-y-2"></div>
 
-    <!-- Sidebar -->
+
     <div class="flex h-screen text-sm">
+        <!-- Sidebar -->
         <aside class="w-64 bg-gray-800 p-4 space-y-4 border-r border-gray-700 hidden md:block">
             <!-- Logo -->
             <div class="text-2xl font-bold text-red-700 mb-6 flex justify-center">
@@ -52,7 +59,7 @@
             </div>
 
             <!-- Navigation -->
-            <nav class="space-y-2 font-medium">
+            <nav class="space-y-2">
                 <a id="new-fish" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700 cursor-pointer">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                         stroke-linecap="round" stroke-linejoin="round"
@@ -79,7 +86,7 @@
                     <svg width="24" height="24" class="text-blue-400" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M10 2a8 8 0 00-5.29 13.99L4 18l2.01-.71A8 8 0 1010 2z" />
                     </svg>
-                    <span class="px-2 py-1 w-full">Fish</span>
+                    <span class="px-2 py-1 w-full">Fish Basket List</span>
                 </div>
 
                 <a class="flex flex-col items-center gap-3 px-3 py-2 rounded-lg">
@@ -106,39 +113,19 @@
             </div>
         </aside>
 
-        <main class="flex-1 relative flex flex-col justify-between pb-6 p-0 overflow-hidden ">
+        <main class="flex-1 relative flex flex-col justify-between p-0 overflow-hidden ">
             <div id="chat-wrapper" class="w-full custom-scrollbar pb-6">
+                <!-- Chat title -->
+                <div id="basket-title" class="basket-title"></div>
                 <!-- Chat messages -->
                 <div id="chat-box" class="w-3/5 mx-auto space-y-3">
-                    <!-- Tin nhắn người khác -->
-                    <div class="fish-left">
-                        <!-- Bubble -->
-                        <div class="bubble-left">
-                            <p>Weh weh weh hhhhhhhhhhh</p>
-                        </div>
-                    </div>
-
-                    <!-- Tin nhắn của bản thân -->
-                    <div class="fish-right">
-                        <div class="bubble-right">
-                            <!-- <span class="text-sm text-white font-semibold"></span> -->
-                            <p>O III ii a i o iii a i o ii a i o iii a i</p>
-
-                        </div>
-                        <span class="bubble-status">Delivered</span>
-                    </div>
-                    <!-- Tin nhắn người khác -->
-                    <div class="fish-left">
-                        <div class="bubble-left">
-                            <!-- <span class="text-sm text-gray-300"></span> -->
-                            <p>Chit chit chit</p>
-                        </div>
-                    </div>
-
+                    <h1 class="welcome-text flex justify-center mt-50">
+                        Meow moeow!
+                    </h1>
                 </div>
             </div>
             <!-- Input box -->
-            <div class="sticky bottom-0 bg-gray-900 p-0 m-0 flex gap-2">
+            <div class="sticky bottom-0 bg-gray-900 p-0 m-0 flex flex-col">
                 <form
                     class="w-3/5 mx-auto relative bg-gray-800 rounded-2xl px-4 py-3 pt-4 flex items-end gap-2 shadow-md"
                     id="chat-form">
@@ -152,8 +139,12 @@
                         <span class="text-lg font-bold">&gt;</span>
                     </button>
                 </form>
+                <!-- Cat ID -->
+                <div id="cat-id" class="cat-id">
+                    <img src="\img\cat_id.gif" alt="cat gif" class="w-8 h-8" />
+                    <span>CAT ID: Something wrong!</span>
+                </div>
             </div>
-
         </main>
 
 
