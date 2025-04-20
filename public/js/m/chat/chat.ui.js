@@ -7,6 +7,7 @@ const UI = {
     chatBox: document.querySelector('#chat-box'),
     catId: document.querySelector('#cat-id'),
     basketTitle: document.querySelector('#basket-title'),
+    fishInput: document.querySelector('#fish-input'),
 };
 
 export const InitUI = () => {
@@ -70,5 +71,6 @@ export const handleStartPMStatus = (res) => {
 
     UI.chatBox.innerHTML = '';
     UI.basketTitle.textContent = res.receiveCat;
+    UI.fishInput.focus();
     showToast('New chat started!', 'success');
 }
