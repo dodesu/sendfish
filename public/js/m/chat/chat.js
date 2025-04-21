@@ -13,17 +13,21 @@ export const setSocket = (s) => {
 /**
  * 
  * @param {ArrayBuffer} sharedSecret 
- * @returns {string} AES key in base64 format.
+ * @returns {CryptoKey} AES key
  */
-export const deriveAESKey = async (sharedSecret) => {
+const deriveAESKey = async (sharedSecret) => {
     const AESKey = await crypto.subtle.importKey(
         "raw",
         sharedSecret,
         { name: "AES-GCM", length: 256 },
-        false,
+        true,
         ["encrypt", "decrypt"]
     );
-    return base64Converter(AESKey);
+    return AESKey;
+}
+const exportAESKey = async (key) => {
+    const exported = await crypto.subtle.exportKey("raw", key);
+    return base64Converter(exported); // => Base64
 }
 
 /**
@@ -118,9 +122,17 @@ export const generateSharedAESKey = async (res) => {
         const sharedSecret = await deriveSharedSecret(myPrivateKeyObj, publicKeyObj);
         // Generate AES key from the shared secret
         const AESkey = await deriveAESKey(sharedSecret);
-        localStorage.setItem(roomId, AESkey);
+        const AESkeyBase64 = await exportAESKey(AESkey);
+        // Export the AES key to base64 format
+        localStorage.setItem(roomId, AESkeyBase64);
         return AESkey; // Return the AES key for further use
     } catch (error) {
         throw error; // Rethrow the error for further handling
     }
+}
+
+export const sendFish = async (fish_text) => {
+
+    const AES_key = localStorage.getItem('AESkey');
+    const fish_encrypt = await encryptMsg(fish_text);
 }
