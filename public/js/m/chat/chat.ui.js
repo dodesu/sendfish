@@ -93,7 +93,11 @@ const handleSendMessage = (e) => {
 }
 const renderFish = () => {
     const { fishInput, fishTank, fishWrapper } = UI;
-    const fish_text = fishInput.value.trim();
+    const fish_text = fishInput.value;
+    console.log(fish_text);
+    if (fish_text.trim() === '') {
+        return;
+    }
 
 
 
@@ -107,7 +111,7 @@ const renderFish = () => {
 
     const fishText = document.createElement('p');
     fishText.className = "fish-text";
-    fishText.textContent = fish_text;
+    fishText.innerText = fish_text.trimEnd();
 
     const status = document.createElement('span');
     status.className = "bubble-status";
