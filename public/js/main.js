@@ -3,11 +3,11 @@ let ECDHkeypairModule, WebSocketModule, ChatModule, ChatUI, ChatWS; // Declare m
 try {
     const res = await fetch('/api/id', { credentials: 'include' });
     const { hasInit, catId } = await res.json();
-    await import('/js/m/toast.js');// Import toast module for notifications
+    await import('/assets/js/m/toast.js');// Import toast module for notifications
 
     if (!hasInit) {
         try {
-            ECDHkeypairModule = await import('/js/core/ECDHkeypair.js');
+            ECDHkeypairModule = await import('/assets/js/core/ECDHkeypair.js');
             ECDHkeypairModule.InitECDH(); // Initialize ECDH key pair, register public key, and store private key in local storage
         } catch (error) {
             console.error('Error importing keyPair or init:', error.message);
@@ -19,7 +19,7 @@ try {
     }
 
     try {
-        WebSocketModule = await import('/js/core/websocket.js');
+        WebSocketModule = await import('/assets/js/core/websocket.js');
     } catch (error) {
         console.error('Error importing websocket:', error.message);
         throw new Error('Error importing websocket');
@@ -27,9 +27,9 @@ try {
 
     // Proceed with chat functionality
     try {
-        ChatModule = await import('/js/m/chat/chat.js');
-        ChatUI = await import('/js/m/chat/chat.ui.js');
-        ChatWS = await import('/js/m/chat/chat.ws.js');
+        ChatModule = await import('/assets/js/m/chat/chat.js');
+        ChatUI = await import('/assets/js/m/chat/chat.ui.js');
+        ChatWS = await import('/assets/js/m/chat/chat.ws.js');
     } catch (error) {
         console.error('Error importing chat:', error.message);
         throw new Error('Chat functionality failed!');
@@ -47,5 +47,5 @@ try {
 } catch (error) {
     console.error('App bootstrapping failed:', error.message);
 } finally {
-    import('/js/load_animation.js');
+    import('/assets/js/load_animation.js');
 }
