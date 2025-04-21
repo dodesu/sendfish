@@ -93,7 +93,6 @@
                     <div class="hover:bg-gray-700 w-full px-2 py-1 rounded-md cursor-pointer">AGeNTXA-6M</div>
                     <div class="hover:bg-gray-700 w-full px-2 py-1 rounded-md cursor-pointer">AGeNTXA-6M</div>
                     <div class="hover:bg-gray-700 w-full px-2 py-1 rounded-md cursor-pointer">AGeNTXA-6M</div>
-
                     <div class="hover:bg-gray-700 w-full px-2 py-1 rounded-md cursor-pointer">AGeNTXA-6M</div>
 
                 </a>
@@ -114,11 +113,11 @@
         </aside>
 
         <main class="flex-1 relative flex flex-col justify-between p-0 overflow-hidden ">
-            <div id="chat-wrapper" class="w-full custom-scrollbar pb-6">
+            <div id="fish-wrapper" class="w-full custom-scrollbar pb-6">
                 <!-- Chat title -->
                 <div id="basket-title" class="basket-title"></div>
                 <!-- Chat messages -->
-                <div id="chat-box" class="w-3/5 mx-auto space-y-3">
+                <div id="fish-tank" class="w-3/5 mx-auto space-y-3">
                     <h1 class="welcome-text flex justify-center mt-50">
                         Meow moeow!
                     </h1>
@@ -128,13 +127,13 @@
             <div class="sticky bottom-0 bg-gray-900 p-0 m-0 flex flex-col">
                 <form
                     class="w-3/5 mx-auto relative bg-gray-800 rounded-2xl px-4 py-3 pt-4 flex items-end gap-2 shadow-md"
-                    id="chat-form">
+                    id="fish-form">
                     <!-- Textarea -->
                     <textarea id="fish-input" rows="3" placeholder="Enter a fish..."
                         class="flex-1 bg-transparent text-white placeholder-gray-400 resize-none focus:outline-none overflow-y-auto max-h-32 pr-12 custom-scrollbar"></textarea>
 
                     <!-- Button send -->
-                    <button type="submit"
+                    <button id="send-btn" type="submit"
                         class="bg-gray-700 hover:bg-gray-600 text-white w-9 h-9 rounded-full flex items-center justify-center shadow-sm">
                         <span class="text-lg font-bold">&gt;</span>
                     </button>
