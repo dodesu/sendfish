@@ -61,6 +61,19 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
             return;
         }
 
+        //Check if the sender use other's id
+        const confirm = this._activeCats.get(sender)?.socketId === catSocket.id;
+        if (!confirm) {
+            this.server.to(catSocket.id).emit('error', { type: 'error', message: 'You are cheating!' });
+            return;
+        }
+
+        // Check if the sender is the same as the receiver
+        if (sender === receiver) {
+            this.server.to(catSocket.id).emit('error', { type: 'error', message: 'You cannot send fish to yourself!' });
+            return;
+        }
+
         const roomId = `${[sender, receiver].sort().join('-')}`;
         if (catSocket.rooms.has(roomId)) {
             // If the room already exists, no need to join again
