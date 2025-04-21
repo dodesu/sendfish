@@ -2,6 +2,7 @@ export interface Fish {
     id: number;
     sender: string;
     receiver: string;
-    message: string;
-    time: Date | string;
+    roomId: string;
+    fishEncrypt: { iv: string; ciphertext: string };
+    time?: Date | string;
 }

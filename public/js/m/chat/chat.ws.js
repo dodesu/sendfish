@@ -1,11 +1,8 @@
-import { handleStartPMStatus } from "./chat.ui.js";
+import { handleStartPMStatus, handleReceiveFish } from "./chat.ui.js";
 
 
 export const InitEvents = (socket) => {
     socket.on('startPMStatus', handleStartPMStatus);
-    // Add other event listeners here as needed
-}
-
-const sendFish = (fish_text) => {
-
+    socket.on('receiveFish', handleReceiveFish);
+    // socket.on('wattingFish', handleReceiveFish);
 }

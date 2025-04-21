@@ -85,8 +85,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @SubscribeMessage('sendFish')
     handleSendFish(@MessageBody() fish: Fish, @ConnectedSocket() catSocket: Socket) {
 
-        const { sender, receiver } = fish;
-        const roomId = `${[sender, receiver].sort().join('-')}`;
+        const { receiver, roomId } = fish;
         // Check if data is valid
         if (!fish) {
             this.server
@@ -106,7 +105,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
         // If both sender and receiver are in the room, send the fish directly
         // If not, send the fish to the receiver's socket directly
-        const bothInRoom = this.isSocketInRoom(roomId, sender, receiver);
+        const bothInRoom = this.isSocketInRoom(roomId, catSocket.id, receiverSocket);
+        this.server.to(catSocket.id).emit('error', { type: 'info', message: `That cat ${bothInRoom ? 'was' : 'not'} in room.` });
         fish.time = new Date().toISOString(); //If set in the client, it can be duplicated
         if (bothInRoom) {
             this.server.to(roomId).emit('receiveFish', fish);
