@@ -2,7 +2,7 @@ let ECDHkeypairModule, WebSocketModule, ChatModule, ChatUI, ChatWS; // Declare m
 
 try {
     const res = await fetch('/api/id', { credentials: 'include' });
-    const { hasInit } = await res.json();
+    const { hasInit, catId } = await res.json();
     await import('/js/m/toast.js');// Import toast module for notifications
 
     if (!hasInit) {
@@ -13,6 +13,9 @@ try {
             console.error('Error importing keyPair or init:', error.message);
             throw new Error('Initialization failed!');
         }
+    } else {
+        // Update, synchronize with cookies
+        localStorage.setItem('catId', catId);
     }
 
     try {
