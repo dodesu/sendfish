@@ -11,15 +11,22 @@ export const setSocket = (s) => {
 }
 
 /**
- * 
- * @param {ArrayBuffer} sharedSecret 
+ * Get the AES key from the shared secret. The shared secret is derived from the private key and the public key.
+ * @param {CryptoKey} ownPrivateKey 
+ * @param {CryptoKey} otherPublicKey 
  * @returns {CryptoKey} AES key
  */
-const deriveAESKey = async (sharedSecret) => {
-    const AESKey = await crypto.subtle.importKey(
-        "raw",
-        sharedSecret,
-        { name: "AES-GCM", length: 256 },
+const deriveAESKey = async (ownPrivateKey, otherPublicKey) => {
+    const AESKey = await crypto.subtle.deriveKey(
+        {
+            name: "ECDH",
+            public: otherPublicKey,
+        },
+        ownPrivateKey,
+        {
+            name: "AES-GCM",
+            length: 256,
+        },
         true,
         ["encrypt", "decrypt"]
     );
@@ -119,9 +126,8 @@ export const generateSharedAESKey = async (res) => {
         // Convert to CryptoKey object
         const myPrivateKeyObj = await importPrivateKey(myPrivateKey);
         const publicKeyObj = await importPublicKey(publicKey);
-        const sharedSecret = await deriveSharedSecret(myPrivateKeyObj, publicKeyObj);
         // Generate AES key from the shared secret
-        const AESkey = await deriveAESKey(sharedSecret);
+        const AESkey = await deriveAESKey(myPrivateKeyObj, publicKeyObj);
         const AESkeyBase64 = await exportAESKey(AESkey);
         // Export the AES key to base64 format
         localStorage.setItem(roomId, AESkeyBase64);
