@@ -75,7 +75,7 @@ export const handleStartPMStatus = (res) => {
     }
 
     UI.fishTank.innerHTML = '';
-    UI.basketTitle.textContent = res.receiveCat;
+    UI.basketTitle.textContent = res.receiver;
     UI.fishInput.focus();
     showToast('New chat started!', 'success');
 }

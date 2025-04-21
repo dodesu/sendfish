@@ -1,7 +1,7 @@
 export interface Fish {
     id: number;
-    senderCat: string;
-    receiverCat: string;
+    sender: string;
+    receiver: string;
     message: string;
     time: Date | string;
 }

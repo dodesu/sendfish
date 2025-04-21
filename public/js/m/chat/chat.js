@@ -97,10 +97,10 @@ export const decryptMsg = async (AESkey, fish) => {
     }
 }
 
-export const startPM = async (receiveCat) => {
-    const senderCat = localStorage.getItem('catId');
-    console.log('startPM', receiveCat);
-    socket.emit('startPM', { senderCat: senderCat, receiveCat: receiveCat });
+export const startPM = async (receiver) => {
+    const sender = localStorage.getItem('catId');
+    console.log('startPM', receiver);
+    socket.emit('startPM', { sender: sender, receiver: receiver });
 }
 
 /**
