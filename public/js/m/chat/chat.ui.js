@@ -80,6 +80,11 @@ export const handleStartPMStatus = (res) => {
     showToast('New chat started!', 'success');
 }
 export const handleReceiveFish = async (fish) => {
+    const { sender } = fish;
+    if (sender === localStorage.getItem('catId')) {
+        return;
+    }
+
     const AESkeyBase64 = localStorage.getItem(fish.roomId);
     const AESkey = await importAESKey(AESkeyBase64);
     let fishText = '';
@@ -88,7 +93,8 @@ export const handleReceiveFish = async (fish) => {
     } catch (error) {
         console.error(error);
     }
-    console.log('Received fish:', fishText);
+
+    renderFish('received', fishText);
 }
 
 const handleSendFish = async (e) => {
@@ -100,40 +106,53 @@ const handleSendFish = async (e) => {
         if (UI.fishInput.value.trim() === '') {
             return;
         }
+        if (UI.basketTitle.textContent === '') {
+            showToast('Please start a new chat', 'warning');
+            return;
+        }
         await sendFish();
-        renderFish();
+        renderFish('sent');
     }
 
 }
-const renderFish = () => {
+const renderFish = (type, message = '') => {
+    // Validate the message type
+    if (type !== 'sent' && type !== 'received') {
+        throw new Error(`Invalid message type: ${type}. It should be 'sent' or 'received'.`);
+    }
+
+    const poisition = type === 'sent' ? 'right' : 'left';
     const { fishInput, fishTank, fishWrapper } = UI;
     const fish_text = fishInput.value;
 
     // Create a new div for fish message
     const fishDiv = document.createElement('div');
-    fishDiv.className = "fish-right";
+    fishDiv.className = `fish-${poisition}`;
 
     const bubble = document.createElement('div');
-    bubble.className = "bubble-right";
+    bubble.className = `bubble-${poisition}`;
 
 
     const fishText = document.createElement('p');
     fishText.className = "fish-text";
-    fishText.innerText = fish_text.trimEnd();
 
-    const status = document.createElement('span');
-    status.className = "bubble-status";
-    status.textContent = "Delivered";
+    if (type === 'sent') {
+        fishText.innerText = fish_text.trimEnd();
+        const status = document.createElement('span');
+        status.className = "bubble-status";
+        status.textContent = "Delivered";
+        fishDiv.appendChild(status);
+        // Clear the input field
+        fishInput.value = '';
+    } else {
+        fishText.innerText = message.trimEnd();
+    }
 
     bubble.appendChild(fishText);
-    fishDiv.appendChild(bubble);
-    fishDiv.appendChild(status);
+    fishDiv.prepend(bubble);
 
     // Add the new fish message to the chat box
     fishTank.appendChild(fishDiv);
-
-    // Clear the input field
-    fishInput.value = '';
     // Scroll to the bottom of the chat box
     fishWrapper.scrollTop = fishWrapper.scrollHeight;
 }
