@@ -20,6 +20,7 @@ import { ChatModule } from './modules/chat/chat.module';
     }),
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'public'),
+      serveRoot: '/assets',
     }),
     RedisModule,
     ChatModule,

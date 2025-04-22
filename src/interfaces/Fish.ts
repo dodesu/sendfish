@@ -1,7 +1,8 @@
 export interface Fish {
     id: number;
-    senderCat: string;
-    receiverCat: string;
-    message: string;
-    time: Date | string;
+    sender: string;
+    receiver: string;
+    roomId: string;
+    fishEncrypt: { iv: string; ciphertext: string };
+    time?: Date | string;
 }

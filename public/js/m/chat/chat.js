@@ -1,6 +1,5 @@
 import {
     importPublicKey,
-    deriveSharedSecret,
     base64Converter,
     importPrivateKey,
 } from '../../core/ECDHkeypair.js';
@@ -11,21 +10,50 @@ export const setSocket = (s) => {
 }
 
 /**
- * 
- * @param {ArrayBuffer} sharedSecret 
- * @returns {string} AES key in base64 format.
+ * Get the AES key from the shared secret. The shared secret is derived from the private key and the public key.
+ * @param {CryptoKey} ownPrivateKey 
+ * @param {CryptoKey} otherPublicKey 
+ * @returns {CryptoKey} AES key
  */
-export const deriveAESKey = async (sharedSecret) => {
-    const AESKey = await crypto.subtle.importKey(
-        "raw",
-        sharedSecret,
-        { name: "AES-GCM", length: 256 },
-        false,
+const deriveAESKey = async (ownPrivateKey, otherPublicKey) => {
+    const AESKey = await crypto.subtle.deriveKey(
+        {
+            name: "ECDH",
+            public: otherPublicKey,
+        },
+        ownPrivateKey,
+        {
+            name: "AES-GCM",
+            length: 256,
+        },
+        true,
         ["encrypt", "decrypt"]
     );
-    return base64Converter(AESKey);
+    return AESKey;
+}
+const exportAESKey = async (key) => {
+    const exported = await crypto.subtle.exportKey("raw", key);
+    return base64Converter(exported); // => Base64
 }
 
+/**
+ * 
+ * @param {String} key Base64 key 
+ * @returns {CryptoKey} AES key
+ */
+export const importAESKey = async (key) => {
+    const binaryKey = base64Converter(key, false);
+    return await crypto.subtle.importKey(
+        "raw",
+        binaryKey.buffer,
+        {
+            name: "AES-GCM",
+            length: 256,
+        },
+        true,
+        ["encrypt", "decrypt"]
+    );
+}
 /**
  * 
  * @param {CryptoKey} key 
@@ -52,7 +80,7 @@ export const encryptMsg = async (key, message) => {
         };
     } catch (error) {
         console.error("Error encrypt:", error);
-        return null;
+        throw error;
     }
 }
 
@@ -63,8 +91,8 @@ export const encryptMsg = async (key, message) => {
  * @param {Uint8Array<ArrayBuffer>} ciphertext 
  * @returns 
  */
-export const decryptMsg = async (AESkey, fish) => {
-    const { iv, ciphertext } = fish;
+export const decryptMsg = async (AESkey, fishEcrypt) => {
+    const { iv, ciphertext } = fishEcrypt;
     //Decoding base64 to ArrayBuffer
     const decodedIv = base64Converter(iv, false);
     const decodedCiphertext = base64Converter(ciphertext, false);
@@ -82,14 +110,14 @@ export const decryptMsg = async (AESkey, fish) => {
         return new TextDecoder().decode(decryptedMsg);
     } catch (error) {
         console.error("Error decrypt:", error);
-        return null;
+        throw error;
     }
 }
 
-export const startPM = async (receiveCat) => {
-    const senderCat = localStorage.getItem('catId');
-    console.log('startPM', receiveCat);
-    socket.emit('startPM', { senderCat: senderCat, receiveCat: receiveCat });
+export const startPM = async (receiver) => {
+    const sender = localStorage.getItem('catId');
+    console.log('startPM', receiver);
+    socket.emit('startPM', { sender: sender, receiver: receiver });
 }
 
 /**
@@ -115,12 +143,29 @@ export const generateSharedAESKey = async (res) => {
         // Convert to CryptoKey object
         const myPrivateKeyObj = await importPrivateKey(myPrivateKey);
         const publicKeyObj = await importPublicKey(publicKey);
-        const sharedSecret = await deriveSharedSecret(myPrivateKeyObj, publicKeyObj);
         // Generate AES key from the shared secret
-        const AESkey = await deriveAESKey(sharedSecret);
-        localStorage.setItem(roomId, AESkey);
+        const AESkey = await deriveAESKey(myPrivateKeyObj, publicKeyObj);
+        const AESkeyBase64 = await exportAESKey(AESkey);
+        // Export the AES key to base64 format
+        localStorage.setItem(roomId, AESkeyBase64);
         return AESkey; // Return the AES key for further use
     } catch (error) {
         throw error; // Rethrow the error for further handling
     }
+}
+
+export const sendFish = async (fishInfo) => {
+    const { text, sender, receiver, roomId } = fishInfo;
+    const AESkeyBase64 = localStorage.getItem(roomId);
+    const AESkey = await importAESKey(AESkeyBase64);
+    const fish_encrypt = await encryptMsg(AESkey, text);
+
+    const fish = {
+        id: 1,
+        fishEncrypt: fish_encrypt,
+        sender: sender,
+        receiver: receiver,
+        roomId: roomId,
+    };
+    socket.emit('sendFish', fish);
 }

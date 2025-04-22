@@ -1,6 +1,6 @@
 import { showToast } from "../toast.js";
-import { startPM, generateSharedAESKey } from "./chat.js";
-
+import { startPM, generateSharedAESKey, sendFish as sendFishToServer, decryptMsg, importAESKey } from "./chat.js";
+import { base64Converter } from "../../core/ECDHkeypair.js";
 
 const UI = {
     newBtn: document.querySelector('#new-fish'),
@@ -18,8 +18,8 @@ export const InitUI = () => {
     // Display the cat ID in the UI
     UI.catId.querySelector('span').textContent =
         `CAT ID: ${localStorage.getItem('catId')}` || 'Unknown Cat ID';
-    UI.fishInput.addEventListener('keydown', handleSendMessage);
-    UI.sendBtn.addEventListener('click', handleSendMessage);
+    UI.fishInput.addEventListener('keydown', handleSendFish);
+    UI.sendBtn.addEventListener('click', handleSendFish);
 }
 
 function newFishBasket() {
@@ -75,31 +75,39 @@ export const handleStartPMStatus = (res) => {
     }
 
     UI.fishTank.innerHTML = '';
-    UI.basketTitle.textContent = res.receiveCat;
+    UI.basketTitle.textContent = res.receiver;
     UI.fishInput.focus();
     showToast('New chat started!', 'success');
 }
+export const handleReceiveFish = async (fish) => {
+    const AESkeyBase64 = localStorage.getItem(fish.roomId);
+    const AESkey = await importAESKey(AESkeyBase64);
+    let fishText = '';
+    try {
+        fishText = await decryptMsg(AESkey, fish.fishEncrypt);
+    } catch (error) {
+        console.error(error);
+    }
+    console.log('Received fish:', fishText);
+}
 
-const handleSendMessage = (e) => {
+const handleSendFish = async (e) => {
     const type = e.type;
     if (type === "keydown" && e.key === "Enter" && !e.shiftKey
         || type === "click"
     ) {
         e.preventDefault();
+        if (UI.fishInput.value.trim() === '') {
+            return;
+        }
+        await sendFish();
         renderFish();
-
     }
 
 }
 const renderFish = () => {
     const { fishInput, fishTank, fishWrapper } = UI;
     const fish_text = fishInput.value;
-    console.log(fish_text);
-    if (fish_text.trim() === '') {
-        return;
-    }
-
-
 
     // Create a new div for fish message
     const fishDiv = document.createElement('div');
@@ -128,4 +136,16 @@ const renderFish = () => {
     fishInput.value = '';
     // Scroll to the bottom of the chat box
     fishWrapper.scrollTop = fishWrapper.scrollHeight;
+}
+
+const sendFish = async () => {
+    const sender = localStorage.getItem('catId');
+    const receiver = UI.basketTitle.textContent;
+    const fishInfo = {
+        text: UI.fishInput.value,
+        sender: sender,
+        receiver: receiver,
+        roomId: `${[sender, receiver].sort().join('-')}`
+    }
+    await sendFishToServer(fishInfo);
 }
