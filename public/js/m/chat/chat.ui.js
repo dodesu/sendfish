@@ -11,15 +11,19 @@ const UI = {
     fishWrapper: document.querySelector('#fish-wrapper'),
     fishTank: document.querySelector('#fish-tank'),
     sendBtn: document.querySelector('#send-btn'),
+    pendingFishBtn: document.querySelector('#pending-fish-btn'),
+    pendingFishes: document.querySelector('#pending-fishes'),
+    fishBaskets: document.querySelector('#fish-baskets'),
 };
 
 export const InitUI = () => {
     UI.newBtn.addEventListener('click', newFishBasket);
     // Display the cat ID in the UI
-    UI.catId.querySelector('span').textContent =
-        `CAT ID: ${localStorage.getItem('catId')}` || 'Unknown Cat ID';
+    UI.catId.querySelector('span').textContent
+        = `CAT ID: ${localStorage.getItem('catId')}` || 'Unknown Cat ID';
     UI.fishInput.addEventListener('keydown', handleSendFish);
     UI.sendBtn.addEventListener('click', handleSendFish);
+    UI.pendingFishBtn.addEventListener('click', togglePendingFish);
 }
 
 function newFishBasket() {
@@ -63,6 +67,21 @@ function newFishBasket() {
     input.focus();
 }
 
+function togglePendingFish() {
+    const { pendingFishes, fishBaskets } = UI;
+    pendingFishes.classList.toggle("hidden");
+
+    //response fishBaskets
+    const large = 'max-h-[78%]';
+    const small = 'max-h-[58%]';
+    // Check current class
+    const from = fishBaskets.classList.contains(large) ? large : small;
+    const to = from === large ? small : large;
+
+    fishBaskets.classList.replace(from, to);
+
+}
+
 export const handleStartPMStatus = (res) => {
     history.pushState({}, '', `/c/${res.roomId}`);
     // Update the URL without reloading the page
@@ -80,6 +99,11 @@ export const handleStartPMStatus = (res) => {
     showToast('New chat started!', 'success');
 }
 export const handleReceiveFish = async (fish) => {
+    const { sender } = fish;
+    if (sender === localStorage.getItem('catId')) {
+        return;
+    }
+
     const AESkeyBase64 = localStorage.getItem(fish.roomId);
     const AESkey = await importAESKey(AESkeyBase64);
     let fishText = '';
@@ -88,7 +112,8 @@ export const handleReceiveFish = async (fish) => {
     } catch (error) {
         console.error(error);
     }
-    console.log('Received fish:', fishText);
+
+    renderFish('received', fishText);
 }
 
 const handleSendFish = async (e) => {
@@ -100,40 +125,53 @@ const handleSendFish = async (e) => {
         if (UI.fishInput.value.trim() === '') {
             return;
         }
+        if (UI.basketTitle.textContent === '') {
+            showToast('Please start a new chat', 'warning');
+            return;
+        }
         await sendFish();
-        renderFish();
+        renderFish('sent');
     }
 
 }
-const renderFish = () => {
+const renderFish = (type, message = '') => {
+    // Validate the message type
+    if (type !== 'sent' && type !== 'received') {
+        throw new Error(`Invalid message type: ${type}. It should be 'sent' or 'received'.`);
+    }
+
+    const poisition = type === 'sent' ? 'right' : 'left';
     const { fishInput, fishTank, fishWrapper } = UI;
     const fish_text = fishInput.value;
 
     // Create a new div for fish message
     const fishDiv = document.createElement('div');
-    fishDiv.className = "fish-right";
+    fishDiv.className = `fish-${poisition}`;
 
     const bubble = document.createElement('div');
-    bubble.className = "bubble-right";
+    bubble.className = `bubble-${poisition}`;
 
 
     const fishText = document.createElement('p');
     fishText.className = "fish-text";
-    fishText.innerText = fish_text.trimEnd();
 
-    const status = document.createElement('span');
-    status.className = "bubble-status";
-    status.textContent = "Delivered";
+    if (type === 'sent') {
+        fishText.innerText = fish_text.trimEnd();
+        const status = document.createElement('span');
+        status.className = "bubble-status";
+        status.textContent = "Delivered";
+        fishDiv.appendChild(status);
+        // Clear the input field
+        fishInput.value = '';
+    } else {
+        fishText.innerText = message.trimEnd();
+    }
 
     bubble.appendChild(fishText);
-    fishDiv.appendChild(bubble);
-    fishDiv.appendChild(status);
+    fishDiv.prepend(bubble);
 
     // Add the new fish message to the chat box
     fishTank.appendChild(fishDiv);
-
-    // Clear the input field
-    fishInput.value = '';
     // Scroll to the bottom of the chat box
     fishWrapper.scrollTop = fishWrapper.scrollHeight;
 }
