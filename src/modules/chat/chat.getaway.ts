@@ -44,6 +44,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @SubscribeMessage('register')
     handleRegister(@MessageBody() data: { catId: string }, @ConnectedSocket() catSocket: Socket) {
         //Fix me: If server is restarted, the cookie cat_id is still valid. Can send public key (localStorage) to save in redis if want reuse cat_id.
+        if (this._activeCats.has(data.catId)) {
+            this.server.to(catSocket.id).emit('error', { type: 'error', message: 'This cat id is already registered' });
+            return;
+        }
         const cat: Cat = {
             socketId: catSocket.id,
             createAt: new Date()
