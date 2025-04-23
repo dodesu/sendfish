@@ -37,7 +37,7 @@
     </style>
 </head>
 
-<body class="bg-gray-900 text-white font-sans">
+<body class="bg-gray-900 text-white font-sans max-h-screen overflow-hidden">
     <!-- Loading screen -->
     <div id="loader" class="bg-gray-900">
         <div class="circle"></div>
@@ -59,7 +59,7 @@
             </div>
 
             <!-- Navigation -->
-            <nav class="space-y-2">
+            <nav class="space-y-2 h-[80dvh] max-h-[80dvh]">
                 <a id="new-fish" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700 cursor-pointer">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                         stroke-linecap="round" stroke-linejoin="round"
@@ -72,37 +72,171 @@
                         <polyline points="3.29 7 12 12 20.71 7" />
                         <line x1="12" x2="12" y1="22" y2="12" />
                     </svg>
-                    <span id="span-new-fish" class="px-2 py-1 w-full">New Fish Basket</span>
+                    <span id="span-new-fish" class="px-2 py-1">New Fish Basket</span>
                 </a>
 
-                <a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700 cursor-pointer">
-                    <svg width="24" height="24" class="text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M4 4h12v12H4z" />
-                    </svg>
-                    <span class="px-2 py-1 w-full">Waiting Fish</span>
-                </a>
+                <!-- PENDING FISH -->
+                <div class="relative mb-5">
+                    <button id="pending-fish-btn"
+                        class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700 relative w-full">
 
-                <div class="flex items-center gap-3 px-3 py-2 rounded-lg">
-                    <svg width="24" height="24" class="text-blue-400" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M10 2a8 8 0 00-5.29 13.99L4 18l2.01-.71A8 8 0 1010 2z" />
-                    </svg>
-                    <span class="px-2 py-1 w-full">Fish Basket List</span>
+                        <svg width="24" height="24" viewBox="0 0 32 32" fill="currentColor" class="text-yellow-400">
+                            <path
+                                d="M16,2A14,14,0,1,0,30,16,14,14,0,0,0,16,2ZM8,18a2,2,0,1,1,2-2A2,2,0,0,1,8,18Zm8,0a2,2,0,1,1,2-2A2,2,0,0,1,16,18Zm8,0a2,2,0,1,1,2-2A2,2,0,0,1,24,18Z" />
+                        </svg>
+
+                        <span class="px-2 py-1">Pending Fish</span>
+
+                        <!-- Badge -->
+                        <span
+                            class="absolute -right-1 bg-orange-400 w-5 h-5 flex items-center justify-center rounded-full font-medium">
+                            3
+                        </span>
+                    </button>
+
+                    <!-- Dropdown list -->
+                    <ul id="pending-fishes"
+                        class="hidden flex flex-col items-center px-3 py-2 rounded-lg max-h-[16dvh] custom-scrollbar">
+                        <li class="w-full rounded-md hover:bg-gray-700 p-1">
+                            <a href="#" class=" w-full px-2 py-1 block">AGeNTXA-6M</a>
+                        </li>
+                        <li class="w-full rounded-md hover:bg-gray-700 p-1">
+                            <a href="#" class=" w-full px-2 py-1 block">AGeNTXA-6M</a>
+                        </li>
+                        <li class="w-full rounded-md hover:bg-gray-700 p-1">
+                            <a href="#" class=" w-full px-2 py-1 block">AGeNTXA-6M</a>
+                        </li>
+                        <li class="w-full rounded-md hover:bg-gray-700 p-1">
+                            <a href="#" class=" w-full px-2 py-1 block">AGeNTXA-6M</a>
+                        </li>
+                        <li class="w-full rounded-md hover:bg-gray-700 p-1">
+                            <a href="#" class=" w-full px-2 py-1 block">AGeNTXA-6M</a>
+                        </li>
+                        <li class="w-full rounded-md hover:bg-gray-700 p-1">
+                            <a href="#" class=" w-full px-2 py-1 block">AGeNTXA-6M</a>
+                        </li>
+                    </ul>
                 </div>
 
-                <a class="flex flex-col items-center gap-3 px-3 py-2 rounded-lg">
-                    <div class="hover:bg-gray-700 w-full px-2 py-1 rounded-md cursor-pointer">AGeNTXA-6M</div>
-                    <div class="hover:bg-gray-700 w-full px-2 py-1 rounded-md cursor-pointer">AGeNTXA-6M</div>
-                    <div class="hover:bg-gray-700 w-full px-2 py-1 rounded-md cursor-pointer">AGeNTXA-6M</div>
-                    <div class="hover:bg-gray-700 w-full px-2 py-1 rounded-md cursor-pointer">AGeNTXA-6M</div>
-
-                </a>
-
+                <!-- Fish Basket List -->
+                <div class="flex items-center gap-3 px-3 py-2 m-0 rounded-lg">
+                    <svg width="24px" height="24px" viewBox="0 0 1024 1024" class="icon" version="1.1"
+                        xmlns="http://www.w3.org/2000/svg" fill="#000000">
+                        <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                        <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                        <g id="SVGRepo_iconCarrier">
+                            <path
+                                d="M207.15 570.79L70.29 682.95a11.27 11.27 0 0 1-18-11.85Q96.12 520.35 98 493.25q1.9-26.8-21.48-154a11.27 11.27 0 0 1 18.67-10.36l126.59 115.27q153.3-210 387.37-210c214.7 0 343.67 140.79 343.67 281.57s-129 281.57-343.67 281.57q-257.07 0.05-402-226.51z"
+                                fill="#FFFFFF" />
+                            <path
+                                d="M486.38 656.9q81 0 100.8-46.24c19.8-46.24-31.46-61.14-78.62-61.14-22.18 0-45 30.16-76 53.68q-39.56 29.95 53.82 53.7z"
+                                fill="#FFFFFF" />
+                            <path
+                                d="M150.29 617.39q9.35-36.93 10.19-48.71 1.17-16.56 0-112.93l114.71 67.43q142.1-194.62 359.07-194.62C814.82 328.56 930 436 949.77 553.37c-20.65 127.2-145.08 244-340.62 244q-206.37 0-340.47-146-3.57-5.32-7.06-10.79l-1.5 1.23a593.39 593.39 0 0 1-53-71z"
+                                fill="#D2E4FF" />
+                            <path
+                                d="M758.53 260.3c123.69 47.14 194.29 151.31 194.29 255.47 0 140.79-129 281.57-343.67 281.57q-76.31 0-142.74-20 210.51-34.23 210.51-280.07 0.01-154.66 81.61-236.97z"
+                                fill="#648AFF" />
+                            <path
+                                d="M782.13 774.23l-17.93 12.34c-59.2-70.44-93.07-167.39-93.07-270.82S705 315.36 764.2 244.92l55.8 40.5c-52.24 62.16-103.8 137.29-103.8 230.33s13.72 196.32 65.93 258.48z"
+                                fill="#FFFFFF" />
+                            <path
+                                d="M480.58 655.39q-43.52-18.77-14.26-40.92c31.07-23.52 53.86-53.68 76-53.68a194.76 194.76 0 0 1 31.36 2.41c15.73 9.53 23.2 24.7 13.45 47.47q-19.8 46.24-100.8 46.24-2.92-0.76-5.75-1.52z"
+                                fill="#D2E4FF" />
+                            <path
+                                d="M569.44 560.83c18.59 9.31 28.34 25.08 17.75 49.83q-17.4 40.64-82.08 45.56-46.16-19.11-16.24-41.75c31.07-23.52 53.86-53.68 76-53.68q2.29 0 4.57 0.04z"
+                                fill="#648AFF" />
+                            <path d="M783.81 493.25a33.8 33.79 0 1 0 67.6 0 33.8 33.79 0 1 0-67.6 0Z" fill="#FFFFFF" />
+                            <path
+                                d="M817.61 537.28a44 44 0 1 1 44-44 44.09 44.09 0 0 1-44 44z m0-67.58a23.55 23.55 0 1 0 23.56 23.55 23.58 23.58 0 0 0-23.56-23.55z" />
+                        </g>
+                    </svg>
+                    <span class="px-2 py-1 text-gray-400 font-medium">Fish Basket List</span>
+                </div>
+                <ul id="fish-baskets"
+                    class="flex flex-col items-center px-3 pt-2 pb-4 rounded-lg max-h-[78%] custom-scrollbar">
+                    <li class="w-full rounded-md hover:bg-gray-700 p-1">
+                        <a href="#" class=" w-full px-2 py-1 block">AGeNTXA-6M</a>
+                    </li>
+                    <li class="w-full rounded-md hover:bg-gray-700 p-1">
+                        <a href="#" class=" w-full px-2 py-1 block">AGeNTXA-6M</a>
+                    </li>
+                    <li class="w-full rounded-md hover:bg-gray-700 p-1">
+                        <a href="#" class=" w-full px-2 py-1 block">AGeNTXA-6M</a>
+                    </li>
+                    <li class="w-full rounded-md hover:bg-gray-700 p-1">
+                        <a href="#" class=" w-full px-2 py-1 block">AGeNTXA-6M</a>
+                    </li>
+                    <li class="w-full rounded-md hover:bg-gray-700 p-1">
+                        <a href="#" class=" w-full px-2 py-1 block">AGeNTXA-6M</a>
+                    </li>
+                    <li class="w-full rounded-md hover:bg-gray-700 p-1">
+                        <a href="#" class=" w-full px-2 py-1 block">AGeNTXA-6M</a>
+                    </li>
+                    <li class="w-full rounded-md hover:bg-gray-700 p-1">
+                        <a href="#" class=" w-full px-2 py-1 block">AGeNTXA-6M</a>
+                    </li>
+                    <li class="w-full rounded-md hover:bg-gray-700 p-1">
+                        <a href="#" class=" w-full px-2 py-1 block">AGeNTXA-6M</a>
+                    </li>
+                    <li class="w-full rounded-md hover:bg-gray-700 p-1">
+                        <a href="#" class=" w-full px-2 py-1 block">AGeNTXA-6M</a>
+                    </li>
+                    <li class="w-full rounded-md hover:bg-gray-700 p-1">
+                        <a href="#" class=" w-full px-2 py-1 block">AGeNTXA-6M</a>
+                    </li>
+                    <li class="w-full rounded-md hover:bg-gray-700 p-1">
+                        <a href="#" class=" w-full px-2 py-1 block">AGeNTXA-6M</a>
+                    </li>
+                    <li class="w-full rounded-md hover:bg-gray-700 p-1">
+                        <a href="#" class=" w-full px-2 py-1 block">AGeNTXA-6M</a>
+                    </li>
+                    <li class="w-full rounded-md hover:bg-gray-700 p-1">
+                        <a href="#" class=" w-full px-2 py-1 block">AGeNTXA-6M</a>
+                    </li>
+                    <li class="w-full rounded-md hover:bg-gray-700 p-1">
+                        <a href="#" class=" w-full px-2 py-1 block">AGeNTXA-6M</a>
+                    </li>
+                    <li class="w-full rounded-md hover:bg-gray-700 p-1">
+                        <a href="#" class=" w-full px-2 py-1 block">AGeNTXA-6M</a>
+                    </li>
+                    <li class="w-full rounded-md hover:bg-gray-700 p-1">
+                        <a href="#" class=" w-full px-2 py-1 block">AGeNTXA-6M</a>
+                    </li>
+                    <li class="w-full rounded-md hover:bg-gray-700 p-1">
+                        <a href="#" class=" w-full px-2 py-1 block">AGeNTXA-6M</a>
+                    </li>
+                    <li class="w-full rounded-md hover:bg-gray-700 p-1">
+                        <a href="#" class=" w-full px-2 py-1 block">AGeNTXA-6M</a>
+                    </li>
+                    <li class="w-full rounded-md hover:bg-gray-700 p-1">
+                        <a href="#" class=" w-full px-2 py-1 block">AGeNTXA-6M</a>
+                    </li>
+                    <li class="w-full rounded-md hover:bg-gray-700 p-1">
+                        <a href="#" class=" w-full px-2 py-1 block">AGeNTXA-6M</a>
+                    </li>
+                    <li class="w-full rounded-md hover:bg-gray-700 p-1">
+                        <a href="#" class=" w-full px-2 py-1 block">AGeNTXA-6M</a>
+                    </li>
+                    <li class="w-full rounded-md hover:bg-gray-700 p-1">
+                        <a href="#" class=" w-full px-2 py-1 block">AGeNTXA-6M</a>
+                    </li>
+                    <li class="w-full rounded-md hover:bg-gray-700 p-1">
+                        <a href="#" class=" w-full px-2 py-1 block">AGeNTXA-6M</a>
+                    </li>
+                    <li class="w-full rounded-md hover:bg-gray-700 p-1">
+                        <a href="#" class=" w-full px-2 py-1 block">AGeNTXA-6M</a>
+                    </li>
+                    <li class="w-full rounded-md hover:bg-gray-700 p-1">
+                        <a href="#" class=" w-full px-2 py-1 block">end-TXA-111</a>
+                    </li>
+                </ul>
             </nav>
 
             <!-- Footer -->
-            <div class="absolute bottom-4 w-56">
-                <div class="border-t border-gray-700 pt-4">
-                    <a href="#" class="flex items-center gap-2 text-sm text-gray-400 hover:text-white">
+            <div class="absolute bottom-0 bg-gray-800">
+                <div class="border-t border-gray-700 w-56">
+                    <a href="#" class="flex items-center gap-2 text-sm text-gray-400 hover:text-white p-3">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                             <path d="M15.75 9V5.25M8.25 9V5.25M3 11.25h18M4.5 11.25v8.25h15V11.25" />
                         </svg>

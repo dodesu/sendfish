@@ -11,15 +11,19 @@ const UI = {
     fishWrapper: document.querySelector('#fish-wrapper'),
     fishTank: document.querySelector('#fish-tank'),
     sendBtn: document.querySelector('#send-btn'),
+    pendingFishBtn: document.querySelector('#pending-fish-btn'),
+    pendingFishes: document.querySelector('#pending-fishes'),
+    fishBaskets: document.querySelector('#fish-baskets'),
 };
 
 export const InitUI = () => {
     UI.newBtn.addEventListener('click', newFishBasket);
     // Display the cat ID in the UI
-    UI.catId.querySelector('span').textContent =
-        `CAT ID: ${localStorage.getItem('catId')}` || 'Unknown Cat ID';
+    UI.catId.querySelector('span').textContent
+        = `CAT ID: ${localStorage.getItem('catId')}` || 'Unknown Cat ID';
     UI.fishInput.addEventListener('keydown', handleSendFish);
     UI.sendBtn.addEventListener('click', handleSendFish);
+    UI.pendingFishBtn.addEventListener('click', togglePendingFish);
 }
 
 function newFishBasket() {
@@ -61,6 +65,21 @@ function newFishBasket() {
     });
     UI.newBtn.replaceChild(input, currentSpan);
     input.focus();
+}
+
+function togglePendingFish() {
+    const { pendingFishes, fishBaskets } = UI;
+    pendingFishes.classList.toggle("hidden");
+
+    //response fishBaskets
+    const large = 'max-h-[78%]';
+    const small = 'max-h-[58%]';
+    // Check current class
+    const from = fishBaskets.classList.contains(large) ? large : small;
+    const to = from === large ? small : large;
+
+    fishBaskets.classList.replace(from, to);
+
 }
 
 export const handleStartPMStatus = (res) => {
