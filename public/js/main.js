@@ -19,6 +19,7 @@ try {
     }
 
     try {
+        await import('/assets/libs/socket.io.min.js');
         WebSocketModule = await import('/assets/js/core/websocket.js');
     } catch (error) {
         console.error('Error importing websocket:', error.message);
