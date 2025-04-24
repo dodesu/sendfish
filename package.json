@@ -19,7 +19,9 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "redis": "cmd /c \"D:\\Program File\\Redis-7.4.2-msys2\\start.bat\"",
-    "redis-cli": "cmd /c \"D:\\Program File\\Redis-7.4.2-msys2\\redis-cli.exe\""
+    "redis-cli": "cmd /c \"D:\\Program File\\Redis-7.4.2-msys2\\redis-cli.exe\"",
+    "copy-libs": "cpx \"node_modules/socket.io-client/dist/socket.io.min.js\" \"public/libs\"",
+    "postinstall": "npm run copy-libs"
   },
   "dependencies": {
     "@nestjs/cache-manager": "3.0.1",
