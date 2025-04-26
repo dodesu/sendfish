@@ -14,7 +14,7 @@ export const initDB = async (hasInit) => {
     });
 }
 
-export const addFish = async (fish) => {
+export const saveFish = async (fish) => {
     try {
         await db.add('messages', fish, `${fish.roomId}${fish.id}`);
     } catch (error) {

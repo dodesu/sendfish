@@ -3,7 +3,7 @@ import {
     base64Converter,
     importPrivateKey,
 } from '../../core/ECDHkeypair.js';
-import { addFish, genId } from "../history/chat-history.js";
+import { saveFish, genId } from "../history/chat-history.js";
 let socket;
 
 export const setSocket = (s) => {
@@ -170,6 +170,7 @@ export const sendFish = async (fishInfo) => {
         roomId: roomId,
     };
 
-    await addFish(fish);
+    await saveFish(fish);
     socket.emit('sendFish', fish);
+    return `${roomId}${id}`;
 }
