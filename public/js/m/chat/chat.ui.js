@@ -129,7 +129,11 @@ const handleSendFish = async (e) => {
             showToast('Please start a new chat', 'warning');
             return;
         }
-        await sendFish();
+        try {
+            await sendFish();
+        } catch (error) {
+            console.error(error);
+        }
         renderFish('sent');
     }
 
