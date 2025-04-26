@@ -1,4 +1,3 @@
-import { stat } from 'fs';
 import {
     importPublicKey,
     base64Converter,
