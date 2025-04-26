@@ -1,3 +1,4 @@
+import { stat } from 'fs';
 import {
     importPublicKey,
     base64Converter,
@@ -168,6 +169,7 @@ export const sendFish = async (fishInfo) => {
         sender: sender,
         receiver: receiver,
         roomId: roomId,
+        status: 'delivered'
     };
 
     await saveFish(fish);
