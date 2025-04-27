@@ -3,6 +3,7 @@ import {
     base64Converter,
     importPrivateKey,
 } from '../../core/ECDHkeypair.js';
+import { saveFish, genId } from "../history/chat-history.js";
 let socket;
 
 export const setSocket = (s) => {
@@ -160,12 +161,17 @@ export const sendFish = async (fishInfo) => {
     const AESkey = await importAESKey(AESkeyBase64);
     const fish_encrypt = await encryptMsg(AESkey, text);
 
+    const id = await genId(roomId) + 1;
     const fish = {
-        id: 1,
+        id: id,
         fishEncrypt: fish_encrypt,
         sender: sender,
         receiver: receiver,
         roomId: roomId,
+        status: 'delivered'
     };
+
+    await saveFish(fish);
     socket.emit('sendFish', fish);
+    return `${roomId}${id}`;
 }

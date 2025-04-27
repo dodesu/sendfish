@@ -1,6 +1,5 @@
 import { showToast } from "../toast.js";
 import { startPM, generateSharedAESKey, sendFish as sendFishToServer, decryptMsg, importAESKey } from "./chat.js";
-import { base64Converter } from "../../core/ECDHkeypair.js";
 
 const UI = {
     newBtn: document.querySelector('#new-fish'),
@@ -112,8 +111,8 @@ export const handleReceiveFish = async (fish) => {
     } catch (error) {
         console.error(error);
     }
-
-    renderFish('received', fishText);
+    const fishDivId = `${fish.roomId}${fish.id}`;
+    renderFish('received', fishDivId, fishText);
 }
 
 const handleSendFish = async (e) => {
@@ -129,12 +128,17 @@ const handleSendFish = async (e) => {
             showToast('Please start a new chat', 'warning');
             return;
         }
-        await sendFish();
-        renderFish('sent');
+        let fishDivId;
+        try {
+            fishDivId = await sendFish();
+        } catch (error) {
+            console.error(error);
+        }
+        renderFish('sent', fishDivId);
     }
 
 }
-const renderFish = (type, message = '') => {
+const renderFish = (type, fishDivId, message = '') => {
     // Validate the message type
     if (type !== 'sent' && type !== 'received') {
         throw new Error(`Invalid message type: ${type}. It should be 'sent' or 'received'.`);
@@ -147,6 +151,7 @@ const renderFish = (type, message = '') => {
     // Create a new div for fish message
     const fishDiv = document.createElement('div');
     fishDiv.className = `fish-${poisition}`;
+    fishDiv.id = fishDivId;
 
     const bubble = document.createElement('div');
     bubble.className = `bubble-${poisition}`;
@@ -185,5 +190,5 @@ const sendFish = async () => {
         receiver: receiver,
         roomId: `${[sender, receiver].sort().join('-')}`
     }
-    await sendFishToServer(fishInfo);
+    return await sendFishToServer(fishInfo);
 }

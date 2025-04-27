@@ -1,4 +1,4 @@
-let ECDHkeypairModule, WebSocketModule, ChatModule, ChatUI, ChatWS; // Declare modules to be used later
+let ECDHkeypairModule, WebSocketModule, ChatModule, ChatUI, ChatWS, ChatHistory; // Declare modules to be used later
 
 try {
     const res = await fetch('/api/id', { credentials: 'include' });
@@ -19,10 +19,18 @@ try {
     }
 
     try {
+        await import('/assets/libs/socket.io.min.js');
         WebSocketModule = await import('/assets/js/core/websocket.js');
     } catch (error) {
         console.error('Error importing websocket:', error.message);
         throw new Error('Error importing websocket');
+    }
+    // Import chat history
+    try {
+        ChatHistory = await import('/assets/js/m/history/chat-history.js');
+    } catch (error) {
+        console.error('Error importing chat history:', error.message);
+        throw new Error('Chat history functionality failed!');
     }
 
     // Proceed with chat functionality
@@ -37,10 +45,13 @@ try {
 
 
 
+
     const socket = WebSocketModule.ConnectSocket(); // Initialize WebSocket connection
     WebSocketModule.InitEvents(socket); // Initialize WebSocket events
-
     ChatModule.setSocket(socket); // Assign socket to Chat module
+
+    await ChatHistory.initDB(hasInit);
+
     ChatUI.InitUI(socket);
     ChatWS.InitEvents(socket); // Initialize WebSocket events for chat
 

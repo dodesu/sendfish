@@ -25,6 +25,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly server: Server;
 
     private _activeCats = new Map<string, Cat>();
+    private _roomCount = new Map<string, number>();
     constructor(private readonly _redisService: RedisService) { };
 
     handleConnection(catSocket: Socket) {
@@ -45,7 +46,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     handleRegister(@MessageBody() data: { catId: string }, @ConnectedSocket() catSocket: Socket) {
         //Fix me: If server is restarted, the cookie cat_id is still valid. Can send public key (localStorage) to save in redis if want reuse cat_id.
         if (this._activeCats.has(data.catId)) {
-            this.server.to(catSocket.id).emit('error', { type: 'error', message: 'This cat id is already registered' });
+            this.server.to(catSocket.id).emit('error', { type: 'error', message: 'You are already registered' });
             return;
         }
         const cat: Cat = {
@@ -85,7 +86,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
                 .to(catSocket.id)
                 .emit('error', {
                     type: 'info',
-                    message: 'This cat id is already in your fish basket list'
+                    message: 'You are already in your fish basket list'
                 });
         }
 
@@ -125,11 +126,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         const bothInRoom = this.isSocketInRoom(roomId, catSocket.id, receiverSocket);
         this.server.to(catSocket.id).emit('error', { type: 'info', message: `That cat ${bothInRoom ? 'was' : 'not'} in room.` });
         fish.time = new Date().toISOString(); //If set in the client, it can be duplicated
+        const count = this._roomCount.get(roomId) ?? 0;
+        fish.id = fish.id !== count + 1 ? count + 1 : fish.id;
         if (bothInRoom) {
             this.server.to(roomId).emit('receiveFish', fish);
         } else {
             this.server.to(receiverSocket).emit('wattingFish', fish);
         }
+        this._roomCount.set(roomId, fish.id);
         // Notify the sender that the fish has been sent
         this.server
             .to(receiverSocket)
