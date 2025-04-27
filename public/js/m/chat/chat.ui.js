@@ -1,5 +1,6 @@
 import { showToast } from "../toast.js";
 import { startPM, generateSharedAESKey, sendFish as sendFishToServer, decryptMsg, importAESKey } from "./chat.js";
+import { saveFish } from "../history/chat-history.js";
 
 const UI = {
     newBtn: document.querySelector('#new-fish'),
@@ -99,19 +100,30 @@ export const handleStartPMStatus = (res) => {
 }
 export const handleReceiveFish = async (fish) => {
     const { sender } = fish;
+    // Ignore fish sent by the current user. Cuz the server will send to all users in the room, even the current user. 
     if (sender === localStorage.getItem('catId')) {
+        //note: It is possible to update the status of the sent message, without the need for the server to send another response. 
+        // Issue: Reliability. Others may not receive it because of a connection, network error, or something else.
         return;
     }
 
-    const AESkeyBase64 = localStorage.getItem(fish.roomId);
-    const AESkey = await importAESKey(AESkeyBase64);
+    const { roomId, fishEncrypt, id } = fish;
+
     let fishText = '';
     try {
-        fishText = await decryptMsg(AESkey, fish.fishEncrypt);
+        const AESkeyBase64 = localStorage.getItem(roomId);
+        const AESkey = await importAESKey(AESkeyBase64);
+        fishText = await decryptMsg(AESkey, fishEncrypt);
     } catch (error) {
-        console.error(error);
+        console.error("Error decrypting message", error);
     }
-    const fishDivId = `${fish.roomId}${fish.id}`;
+
+    try {
+        await saveFish(fish);
+    } catch (error) {
+        console.error("Error saving message to the database: ", error);
+    }
+    const fishDivId = `${roomId}${id}`;
     renderFish('received', fishDivId, fishText);
 }
 

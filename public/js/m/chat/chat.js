@@ -172,6 +172,7 @@ export const sendFish = async (fishInfo) => {
     };
 
     await saveFish(fish);
+    delete fish.status; // Don't send the status to the receiver
     socket.emit('sendFish', fish);
     return `${roomId}${id}`;
 }
