@@ -1,6 +1,9 @@
 import { showToast } from "../toast.js";
 import { startPM, generateSharedAESKey, sendFish as sendFishToServer, decryptMsg, importAESKey } from "./chat.js";
 import { saveFish } from "../history/chat-history.js";
+import { send } from "process";
+
+const pendingList = new Set();
 
 const UI = {
     newBtn: document.querySelector('#new-fish'),
@@ -125,6 +128,17 @@ export const handleReceiveFish = async (fish) => {
     }
     const fishDivId = `${roomId}${id}`;
     renderFish('received', fishDivId, fishText);
+}
+
+export const handlePendingFish = async (fish) => {
+    const { sender } = fish;
+    pendingList.add(sender);
+
+    try {
+        await saveFish(fish);
+    } catch (error) {
+        console.error("Error saving message to the database: ", error);
+    }
 }
 
 const handleSendFish = async (e) => {
