@@ -1,7 +1,6 @@
 import { showToast } from "../toast.js";
 import { startPM, generateSharedAESKey, sendFish as sendFishToServer, decryptMsg, importAESKey } from "./chat.js";
 import { saveFish } from "../history/chat-history.js";
-import { send } from "process";
 
 const pendingList = new Set();
 
@@ -27,6 +26,7 @@ export const InitUI = () => {
     UI.fishInput.addEventListener('keydown', handleSendFish);
     UI.sendBtn.addEventListener('click', handleSendFish);
     UI.pendingFishBtn.addEventListener('click', togglePendingFish);
+    UI.pendingFishes.addEventListener('click', handlePendingFishClick);
 }
 
 function newFishBasket() {
@@ -53,6 +53,7 @@ function newFishBasket() {
                 showToast('Please enter a valid ID', 'warning');
             } else {
                 startPM(input.value.trim());
+                addFishList('basket', input.value.trim());
             }
             reset();
         }
@@ -132,8 +133,10 @@ export const handleReceiveFish = async (fish) => {
 
 export const handlePendingFish = async (fish) => {
     const { sender } = fish;
-    pendingList.add(sender);
-    addPendingFish(sender);
+    if (!pendingList.has(sender)) {
+        pendingList.add(sender);
+        addFishList('pending', sender);
+    }
 
     try {
         await saveFish(fish);
@@ -220,7 +223,13 @@ const sendFish = async () => {
     return await sendFishToServer(fishInfo);
 }
 
-const addPendingFish = async (title) => {
+const addFishList = async (type, title) => {
+    if (type !== 'pending' && type !== 'basket') {
+        throw new Error(`Invalid message list type: ${type}. It should be 'pending' or 'basket'.`);
+    }
+
+    const { pendingFishes, fishBaskets } = UI;
+
     const li = document.createElement("li");
     li.className = "w-full rounded-md hover:bg-gray-700 p-1";
 
@@ -230,6 +239,21 @@ const addPendingFish = async (title) => {
     a.textContent = title;
 
     li.appendChild(a);
-    UI.pendingFishes.prepend(li);
+    if (type === 'pending') {
+        pendingFishes.prepend(li);
+    } else {
+        fishBaskets.prepend(li);
+    }
 
+}
+
+const handlePendingFishClick = (e) => {
+    const { pendingFishes } = UI;
+    const clickedLink = e.target.closest("li");
+    if (clickedLink && pendingFishes.contains(clickedLink)) {
+        e.preventDefault();
+        pendingFishes.removeChild(clickedLink);
+        const title = clickedLink.querySelector("a").textContent;
+        addFishList('basket', title);
+    }
 }
