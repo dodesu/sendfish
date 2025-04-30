@@ -133,6 +133,7 @@ export const handleReceiveFish = async (fish) => {
 export const handlePendingFish = async (fish) => {
     const { sender } = fish;
     pendingList.add(sender);
+    addPendingFish(sender);
 
     try {
         await saveFish(fish);
@@ -217,4 +218,18 @@ const sendFish = async () => {
         roomId: `${[sender, receiver].sort().join('-')}`
     }
     return await sendFishToServer(fishInfo);
+}
+
+const addPendingFish = async (title) => {
+    const li = document.createElement("li");
+    li.className = "w-full rounded-md hover:bg-gray-700 p-1";
+
+    const a = document.createElement("a");
+    a.href = "#";
+    a.className = "w-full px-2 py-1 block";
+    a.textContent = title;
+
+    li.appendChild(a);
+    UI.pendingFishes.prepend(li);
+
 }
