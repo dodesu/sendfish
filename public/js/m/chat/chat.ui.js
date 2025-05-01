@@ -1,5 +1,8 @@
 import { showToast } from "../toast.js";
 import { startPM, generateSharedAESKey, sendFish as sendFishToServer, decryptMsg, importAESKey } from "./chat.js";
+import { saveFish } from "../history/chat-history.js";
+
+const pendingList = new Set();
 
 const UI = {
     newBtn: document.querySelector('#new-fish'),
@@ -23,6 +26,7 @@ export const InitUI = () => {
     UI.fishInput.addEventListener('keydown', handleSendFish);
     UI.sendBtn.addEventListener('click', handleSendFish);
     UI.pendingFishBtn.addEventListener('click', togglePendingFish);
+    UI.pendingFishes.addEventListener('click', handlePendingFishClick);
 }
 
 function newFishBasket() {
@@ -49,6 +53,7 @@ function newFishBasket() {
                 showToast('Please enter a valid ID', 'warning');
             } else {
                 startPM(input.value.trim());
+                addFishList('basket', input.value.trim());
             }
             reset();
         }
@@ -99,20 +104,45 @@ export const handleStartPMStatus = (res) => {
 }
 export const handleReceiveFish = async (fish) => {
     const { sender } = fish;
+    // Ignore fish sent by the current user. Cuz the server will send to all users in the room, even the current user. 
     if (sender === localStorage.getItem('catId')) {
+        //note: It is possible to update the status of the sent message, without the need for the server to send another response. 
+        // Issue: Reliability. Others may not receive it because of a connection, network error, or something else.
         return;
     }
 
-    const AESkeyBase64 = localStorage.getItem(fish.roomId);
-    const AESkey = await importAESKey(AESkeyBase64);
+    const { roomId, fishEncrypt, id } = fish;
+
     let fishText = '';
     try {
-        fishText = await decryptMsg(AESkey, fish.fishEncrypt);
+        const AESkeyBase64 = localStorage.getItem(roomId);
+        const AESkey = await importAESKey(AESkeyBase64);
+        fishText = await decryptMsg(AESkey, fishEncrypt);
     } catch (error) {
-        console.error(error);
+        console.error("Error decrypting message", error);
     }
-    const fishDivId = `${fish.roomId}${fish.id}`;
+
+    try {
+        await saveFish(fish);
+    } catch (error) {
+        console.error("Error saving message to the database: ", error);
+    }
+    const fishDivId = `${roomId}${id}`;
     renderFish('received', fishDivId, fishText);
+}
+
+export const handlePendingFish = async (fish) => {
+    const { sender } = fish;
+    if (!pendingList.has(sender)) {
+        pendingList.add(sender);
+        addFishList('pending', sender);
+    }
+
+    try {
+        await saveFish(fish);
+    } catch (error) {
+        console.error("Error saving message to the database: ", error);
+    }
 }
 
 const handleSendFish = async (e) => {
@@ -191,4 +221,39 @@ const sendFish = async () => {
         roomId: `${[sender, receiver].sort().join('-')}`
     }
     return await sendFishToServer(fishInfo);
+}
+
+const addFishList = async (type, title) => {
+    if (type !== 'pending' && type !== 'basket') {
+        throw new Error(`Invalid message list type: ${type}. It should be 'pending' or 'basket'.`);
+    }
+
+    const { pendingFishes, fishBaskets } = UI;
+
+    const li = document.createElement("li");
+    li.className = "w-full rounded-md hover:bg-gray-700 p-1";
+
+    const a = document.createElement("a");
+    a.href = "#";
+    a.className = "w-full px-2 py-1 block";
+    a.textContent = title;
+
+    li.appendChild(a);
+    if (type === 'pending') {
+        pendingFishes.prepend(li);
+    } else {
+        fishBaskets.prepend(li);
+    }
+
+}
+
+const handlePendingFishClick = (e) => {
+    const { pendingFishes } = UI;
+    const clickedLink = e.target.closest("li");
+    if (clickedLink && pendingFishes.contains(clickedLink)) {
+        e.preventDefault();
+        pendingFishes.removeChild(clickedLink);
+        const title = clickedLink.querySelector("a").textContent;
+        addFishList('basket', title);
+    }
 }

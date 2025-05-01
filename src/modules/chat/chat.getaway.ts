@@ -131,7 +131,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         if (bothInRoom) {
             this.server.to(roomId).emit('receiveFish', fish);
         } else {
-            this.server.to(receiverSocket).emit('wattingFish', fish);
+            this.server.to(receiverSocket).emit('pendingFish', fish);
         }
         this._roomCount.set(roomId, fish.id);
         // Notify the sender that the fish has been sent
