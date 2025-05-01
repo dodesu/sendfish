@@ -1,5 +1,11 @@
 import { showToast } from "../toast.js";
-import { startPM, generateSharedAESKey, sendFish as sendFishToServer, decryptMsg, importAESKey } from "./chat.js";
+import {
+    startPM,
+    generateSharedAESKey,
+    sendFish as sendFishToServer,
+    decryptMsg,
+    importAESKey
+} from "./chat.js";
 import { saveFish } from "../history/chat-history.js";
 
 const pendingList = new Set();
@@ -19,7 +25,7 @@ const UI = {
 };
 
 export const InitUI = () => {
-    UI.newBtn.addEventListener('click', newFishBasket);
+    UI.newBtn.addEventListener('click', handleAddFishBasket);
     // Display the cat ID in the UI
     UI.catId.querySelector('span').textContent
         = `CAT ID: ${localStorage.getItem('catId')}` || 'Unknown Cat ID';
@@ -29,7 +35,8 @@ export const InitUI = () => {
     UI.pendingFishes.addEventListener('click', handlePendingFishClick);
 }
 
-function newFishBasket() {
+//### UI Event Handlers
+function handleAddFishBasket() {
     const currentSpan = document.querySelector('#span-new-fish');
     if (!currentSpan) return;
 
@@ -71,6 +78,41 @@ function newFishBasket() {
     input.focus();
 }
 
+const handleSendFish = async (e) => {
+    const type = e.type;
+    if (type === "keydown" && e.key === "Enter" && !e.shiftKey
+        || type === "click"
+    ) {
+        e.preventDefault();
+        if (UI.fishInput.value.trim() === '') {
+            return;
+        }
+        if (UI.basketTitle.textContent === '') {
+            showToast('Please start a new chat', 'warning');
+            return;
+        }
+        let fishDivId;
+        try {
+            fishDivId = await sendFish();
+        } catch (error) {
+            console.error(error);
+        }
+        renderFish('sent', fishDivId);
+    }
+
+}
+
+const handlePendingFishClick = (e) => {
+    const { pendingFishes } = UI;
+    const clickedLink = e.target.closest("li");
+    if (clickedLink && pendingFishes.contains(clickedLink)) {
+        e.preventDefault();
+        pendingFishes.removeChild(clickedLink);
+        const title = clickedLink.querySelector("a").textContent;
+        addFishList('basket', title);
+    }
+}
+
 function togglePendingFish() {
     const { pendingFishes, fishBaskets } = UI;
     pendingFishes.classList.toggle("hidden");
@@ -86,22 +128,7 @@ function togglePendingFish() {
 
 }
 
-export const handleStartPMStatus = (res) => {
-    history.pushState({}, '', `/c/${res.roomId}`);
-    // Update the URL without reloading the page
-    try {
-        generateSharedAESKey(res);
-    } catch (error) {
-        showToast(error.message, 'error');
-        console.error('Error generating shared AES key:', error);
-        return;
-    }
-
-    UI.fishTank.innerHTML = '';
-    UI.basketTitle.textContent = res.receiver;
-    UI.fishInput.focus();
-    showToast('New chat started!', 'success');
-}
+//### WS Event Handlers
 export const handleReceiveFish = async (fish) => {
     const { sender } = fish;
     // Ignore fish sent by the current user. Cuz the server will send to all users in the room, even the current user. 
@@ -145,29 +172,24 @@ export const handlePendingFish = async (fish) => {
     }
 }
 
-const handleSendFish = async (e) => {
-    const type = e.type;
-    if (type === "keydown" && e.key === "Enter" && !e.shiftKey
-        || type === "click"
-    ) {
-        e.preventDefault();
-        if (UI.fishInput.value.trim() === '') {
-            return;
-        }
-        if (UI.basketTitle.textContent === '') {
-            showToast('Please start a new chat', 'warning');
-            return;
-        }
-        let fishDivId;
-        try {
-            fishDivId = await sendFish();
-        } catch (error) {
-            console.error(error);
-        }
-        renderFish('sent', fishDivId);
+export const handleStartPMStatus = (res) => {
+    history.pushState({}, '', `/c/${res.roomId}`);
+    // Update the URL without reloading the page
+    try {
+        generateSharedAESKey(res);
+    } catch (error) {
+        showToast(error.message, 'error');
+        console.error('Error generating shared AES key:', error);
+        return;
     }
 
+    UI.fishTank.innerHTML = '';
+    UI.basketTitle.textContent = res.receiver;
+    UI.fishInput.focus();
+    showToast('New chat started!', 'success');
 }
+
+//### UI Functions
 const renderFish = (type, fishDivId, message = '') => {
     // Validate the message type
     if (type !== 'sent' && type !== 'received') {
@@ -211,6 +233,10 @@ const renderFish = (type, fishDivId, message = '') => {
     fishWrapper.scrollTop = fishWrapper.scrollHeight;
 }
 
+/**
+ * Prepare and send fish to the server.
+ * @returns Key of messages in the database
+ */
 const sendFish = async () => {
     const sender = localStorage.getItem('catId');
     const receiver = UI.basketTitle.textContent;
@@ -245,15 +271,4 @@ const addFishList = async (type, title) => {
         fishBaskets.prepend(li);
     }
 
-}
-
-const handlePendingFishClick = (e) => {
-    const { pendingFishes } = UI;
-    const clickedLink = e.target.closest("li");
-    if (clickedLink && pendingFishes.contains(clickedLink)) {
-        e.preventDefault();
-        pendingFishes.removeChild(clickedLink);
-        const title = clickedLink.querySelector("a").textContent;
-        addFishList('basket', title);
-    }
 }
