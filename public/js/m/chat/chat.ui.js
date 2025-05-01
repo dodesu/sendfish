@@ -60,7 +60,6 @@ function handleAddFishBasket() {
                 showToast('Please enter a valid ID', 'warning');
             } else {
                 startPM(input.value.trim());
-                addFishList('basket', input.value.trim());
             }
             reset();
         }
@@ -173,10 +172,10 @@ export const handlePendingFish = async (fish) => {
 }
 
 export const handleStartPMStatus = (res) => {
-    history.pushState({}, '', `/c/${res.roomId}`);
+    const { roomId, publicKey, receiver } = res;
     // Update the URL without reloading the page
     try {
-        generateSharedAESKey(res);
+        generateSharedAESKey(roomId, publicKey);
     } catch (error) {
         showToast(error.message, 'error');
         console.error('Error generating shared AES key:', error);
@@ -184,8 +183,9 @@ export const handleStartPMStatus = (res) => {
     }
 
     UI.fishTank.innerHTML = '';
-    UI.basketTitle.textContent = res.receiver;
+    UI.basketTitle.textContent = receiver;
     UI.fishInput.focus();
+    addFishList('basket', receiver);
     showToast('New chat started!', 'success');
 }
 
