@@ -6,7 +6,7 @@ import {
     decryptMsg,
     importAESKey
 } from "./chat.js";
-import { saveFish, addRoom, updateRoom } from "../history/chat-history.js";
+import { saveFish, addRoom, updateRoom, getRoomsByType } from "../history/chat-history.js";
 
 const pendingList = new Set();
 
@@ -25,6 +25,16 @@ const UI = {
 };
 
 export const InitUI = () => {
+    loadActiveChat();
+    setEvents();
+}
+const loadActiveChat = async () => {
+    const activeChats = await getRoomsByType('active');
+    activeChats?.forEach(chat => {
+        addFishList('active', chat.partner);
+    });
+}
+const setEvents = () => {
     UI.newBtn.addEventListener('click', handleAddFishBasket);
     // Display the cat ID in the UI
     UI.catId.querySelector('span').textContent
@@ -113,7 +123,7 @@ const handlePendingFishClick = (e) => {
         // Update the room
         const catId = localStorage.getItem('catId');
         const roomId = `${[catId, title].sort().join('-')}`;
-        updateRoom(roomId, 'private');
+        updateRoom(roomId, 'active');
     }
 }
 
@@ -170,7 +180,7 @@ export const handlePendingFish = async (fish) => {
     }
 
     try {
-        await addRoom(roomId, 'pending');
+        await addRoom(roomId, 'pending', sender);
         await saveFish(fish);
     } catch (error) {
         console.error("Error saving message to the database: ", error);
@@ -192,11 +202,11 @@ export const handleStartPMStatus = async (res) => {
     UI.basketTitle.textContent = receiver;
     UI.fishInput.focus();
     addFishList('active', receiver);
-    await addRoom(roomId, 'private');
+    await updateRoom(roomId, 'active', receiver);
     showToast('New chat started!', 'success');
 }
 
-//### UI Functions
+//### UI Extension Functions
 const renderFish = (type, fishDivId, message = '') => {
     // Validate the message type
     if (type !== 'sent' && type !== 'received') {
