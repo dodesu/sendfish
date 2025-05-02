@@ -108,7 +108,7 @@ const handlePendingFishClick = (e) => {
         e.preventDefault();
         pendingFishes.removeChild(clickedLink);
         const title = clickedLink.querySelector("a").textContent;
-        addFishList('basket', title);
+        addFishList('active', title);
 
         // Update the room
         const catId = localStorage.getItem('catId');
@@ -191,7 +191,7 @@ export const handleStartPMStatus = async (res) => {
     UI.fishTank.innerHTML = '';
     UI.basketTitle.textContent = receiver;
     UI.fishInput.focus();
-    addFishList('basket', receiver);
+    addFishList('active', receiver);
     await addRoom(roomId, 'private');
     showToast('New chat started!', 'success');
 }
@@ -257,8 +257,8 @@ const sendFish = async () => {
 }
 
 const addFishList = async (type, title) => {
-    if (type !== 'pending' && type !== 'basket') {
-        throw new Error(`Invalid message list type: ${type}. It should be 'pending' or 'basket'.`);
+    if (type !== 'pending' && type !== 'active') {
+        throw new Error(`Invalid message list type: ${type}. It should be 'pending' or 'active'.`);
     }
 
     const { pendingFishes, fishBaskets } = UI;
