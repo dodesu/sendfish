@@ -6,7 +6,7 @@ import {
     decryptMsg,
     importAESKey
 } from "./chat.js";
-import { saveFish } from "../history/chat-history.js";
+import { saveFish, addRoom, updateRoom } from "../history/chat-history.js";
 
 const pendingList = new Set();
 
@@ -109,6 +109,11 @@ const handlePendingFishClick = (e) => {
         pendingFishes.removeChild(clickedLink);
         const title = clickedLink.querySelector("a").textContent;
         addFishList('basket', title);
+
+        // Update the room
+        const catId = localStorage.getItem('catId');
+        const roomId = `${[catId, title].sort().join('-')}`;
+        updateRoom(roomId, 'private');
     }
 }
 
@@ -158,20 +163,21 @@ export const handleReceiveFish = async (fish) => {
 }
 
 export const handlePendingFish = async (fish) => {
-    const { sender } = fish;
+    const { sender, roomId } = fish;
     if (!pendingList.has(sender)) {
         pendingList.add(sender);
         addFishList('pending', sender);
     }
 
     try {
+        await addRoom(roomId, 'pending');
         await saveFish(fish);
     } catch (error) {
         console.error("Error saving message to the database: ", error);
     }
 }
 
-export const handleStartPMStatus = (res) => {
+export const handleStartPMStatus = async (res) => {
     const { roomId, publicKey, receiver } = res;
     // Update the URL without reloading the page
     try {
@@ -186,6 +192,7 @@ export const handleStartPMStatus = (res) => {
     UI.basketTitle.textContent = receiver;
     UI.fishInput.focus();
     addFishList('basket', receiver);
+    await addRoom(roomId, 'private');
     showToast('New chat started!', 'success');
 }
 
