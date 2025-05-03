@@ -123,14 +123,11 @@ export const startPM = async (receiver) => {
 
 /**
  *  * Generate a shared AES key using the server's response. And save it in localStorage.
- * @param {*} res Response from server. Event: startPM
- * @param {string} res.roomId Room ID for the chat.
- * @param {string} res.publicKey Public key of the other user.
+ * @param {string} roomId Room ID for the chat.
+ * @param {string} publicKey Public key of the other user.
  * @returns {string} AES key in base64 format.
  */
-export const generateSharedAESKey = async (res) => {
-    const { roomId, publicKey } = res;
-
+export const generateSharedAESKey = async (roomId, publicKey) => {
     try {
         if (!roomId || !publicKey) {
             throw new Error("Invalid roomId or publicKey. Error from server.");
