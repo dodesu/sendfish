@@ -174,10 +174,8 @@ export const handleReceiveFish = async (fish) => {
 
 export const handlePendingFish = async (fish) => {
     const { sender, roomId } = fish;
-    if (!pendingList.has(sender)) {
-        pendingList.add(sender);
-        addFishList('pending', sender);
-    }
+
+    addFishList('pending', sender);
 
     try {
         await addRoom(roomId, 'pending', sender);
@@ -270,6 +268,12 @@ const addFishList = async (type, title) => {
     if (type !== 'pending' && type !== 'active') {
         throw new Error(`Invalid message list type: ${type}. It should be 'pending' or 'active'.`);
     }
+    // Check if the fish is already in the list
+    if (isDuplicate(type, title)) {
+        console.log("Fish is already in the list");
+        return;
+    }
+    console.log("Run down error");
 
     const { pendingFishes, fishBaskets } = UI;
 
@@ -282,10 +286,26 @@ const addFishList = async (type, title) => {
     a.textContent = title;
 
     li.appendChild(a);
-    if (type === 'pending') {
-        pendingFishes.prepend(li);
-    } else {
-        fishBaskets.prepend(li);
-    }
+
+    const Add = {
+        pending: () => pendingFishes.prepend(li),
+        active: () => fishBaskets.prepend(li)
+    };
+
+    Add[type]();
 
 }
+
+/**
+ * Check if the chat is already in the list
+ * @param {string} type pending | active
+ * @param {string} title partner id
+ * @returns 
+ */
+const isDuplicate = (type, title) => {
+    const listEl = type === 'pending' ? UI.pendingFishes : UI.fishBaskets;
+    const list = Array.from(listEl.querySelectorAll('li'));
+
+    return list.some(item => item.querySelector('a').textContent === title);
+}
+
