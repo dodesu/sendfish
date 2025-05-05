@@ -1,52 +1,66 @@
-import { showToast } from "../toast.js";
-import {
-    startPM,
-    generateSharedAESKey,
-    sendFish as sendFishToServer,
-    decryptMsg,
-    importAESKey
-} from "./chat.js";
-import { saveFish, addRoom, updateRoom, getRoomsByType } from "../history/chat-history.js";
+import { showToast } from "../../utils/toast.js";
+// import {
+//     generateSharedAESKey,
+//     sendFish as sendFishToServer,
+//     importAESKey
+// } from "./chat.js";
+// import { saveFish, addRoom, updateRoom, getRoomsByType } from "../history/chat-history.js";
 
-const pendingList = new Set();
 
 const UI = {
     newBtn: document.querySelector('#new-fish'),
     fishTank: document.querySelector('#fish-tank'),
-    catId: document.querySelector('#cat-id'),
+    catId: document.querySelector('#cat-id').querySelector('span'),
     basketTitle: document.querySelector('#basket-title'),
     fishInput: document.querySelector('#fish-input'),
     fishWrapper: document.querySelector('#fish-wrapper'),
     fishTank: document.querySelector('#fish-tank'),
     sendBtn: document.querySelector('#send-btn'),
+
     pendingFishBtn: document.querySelector('#pending-fish-btn'),
     pendingFishes: document.querySelector('#pending-fishes'),
+    pendingBadge: document.querySelector('#pending-badge'),
+
     fishBaskets: document.querySelector('#fish-baskets'),
 };
 
-export const InitUI = () => {
-    loadActiveChat();
-    setEvents();
-}
-const loadActiveChat = async () => {
-    const activeChats = await getRoomsByType('active');
+export const loadActiveChats = async (activeChats) => {
     activeChats?.forEach(chat => {
         addFishList('active', chat.partner);
     });
 }
-const setEvents = () => {
-    UI.newBtn.addEventListener('click', handleAddFishBasket);
-    // Display the cat ID in the UI
-    UI.catId.querySelector('span').textContent
-        = `CAT ID: ${localStorage.getItem('catId')}` || 'Unknown Cat ID';
-    UI.fishInput.addEventListener('keydown', handleSendFish);
-    UI.sendBtn.addEventListener('click', handleSendFish);
+
+export const InitUI = () => {
+    UI.catId.textContent
+        = localStorage.getItem('catId') || 'Unknown Cat ID';
     UI.pendingFishBtn.addEventListener('click', togglePendingFish);
-    UI.pendingFishes.addEventListener('click', handlePendingFishClick);
+
+}
+export const bindEventUI = (handlers) => {
+    UI.newBtn.addEventListener('click', () => handleAddFishBasket(handlers.startPM));
+
+    UI.fishInput.addEventListener('keydown',
+        event => handleSendFish(event, handlers.sendFish));
+    UI.sendBtn.addEventListener('click',
+        event => handleSendFish(event, handlers.sendFish));
+
+    UI.pendingFishes.addEventListener('click',
+        event => handlePendingFishClick(event, handlers.updateRoom));
+}
+export const loadingCompleted = () => {
+    const loader = document.querySelector('#loader');
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    const diagonal = Math.sqrt(width ** 2 + height ** 2);
+    const circle = document.querySelector('.circle');
+
+    const deriveScale = diagonal / circle.scrollWidth;
+    circle.style.transform = `scale(${deriveScale})`;
+    setTimeout(() => { loader.remove() }, 700);
 }
 
 //### UI Event Handlers
-function handleAddFishBasket() {
+function handleAddFishBasket(startPM) {
     const currentSpan = document.querySelector('#span-new-fish');
     if (!currentSpan) return;
 
@@ -87,49 +101,74 @@ function handleAddFishBasket() {
     input.focus();
 }
 
-const handleSendFish = async (e) => {
+const handleSendFish = async (e, sendFish) => {
+    const { fishInput, basketTitle, catId } = UI;
     const type = e.type;
     if (type === "keydown" && e.key === "Enter" && !e.shiftKey
         || type === "click"
     ) {
         e.preventDefault();
-        if (UI.fishInput.value.trim() === '') {
+        if (fishInput.value.trim() === '') {
             return;
         }
-        if (UI.basketTitle.textContent === '') {
+        if (basketTitle.textContent === '') {
             showToast('Please start a new chat', 'warning');
             return;
         }
-        let fishDivId;
+
+        const sender = catId.textContent;
+        const receiver = basketTitle.textContent;
+        const fishInfo = {
+            text: fishInput.value,
+            sender: sender,
+            receiver: receiver,
+            roomId: `${[sender, receiver].sort().join('-')}`
+        }
+
+        let fishKey;
+
         try {
-            fishDivId = await sendFish();
+            fishKey = await sendFish(fishInfo);
         } catch (error) {
             console.error(error);
         }
-        renderFish('sent', fishDivId);
+        renderFish('sent', fishKey);
     }
 
 }
 
-const handlePendingFishClick = (e) => {
-    const { pendingFishes } = UI;
+const handlePendingFishClick = (e, updateRoom) => {
+    const { pendingFishes, pendingBadge, catId } = UI;
     const clickedLink = e.target.closest("li");
     if (clickedLink && pendingFishes.contains(clickedLink)) {
         e.preventDefault();
+        if (pendingFishes.querySelectorAll('li').length === 1) {
+            togglePendingFish();
+        }
         pendingFishes.removeChild(clickedLink);
-        const title = clickedLink.querySelector("a").textContent;
-        addFishList('active', title);
+
+
+        const partner = clickedLink.querySelector("a").textContent;
+        addFishList('active', partner);
 
         // Update the room
-        const catId = localStorage.getItem('catId');
-        const roomId = `${[catId, title].sort().join('-')}`;
-        updateRoom(roomId, 'active');
+        const currentId = catId.textContent;
+        const roomId = `${[currentId, partner].sort().join('-')}`;
+        updateRoom(roomId, 'active', partner);
     }
 }
 
 function togglePendingFish() {
     const { pendingFishes, fishBaskets } = UI;
-    pendingFishes.classList.toggle("hidden");
+
+    const sizeList = pendingFishes.querySelectorAll('li').length;
+    if (sizeList >= 1) {
+        pendingFishes.classList.toggle("hidden");
+    }
+    if (sizeList < 3) {
+        return;
+    }
+
 
     //response fishBaskets
     const large = 'max-h-[78%]';
@@ -143,69 +182,24 @@ function togglePendingFish() {
 }
 
 //### WS Event Handlers
-export const handleReceiveFish = async (fish) => {
-    const { sender } = fish;
+
+/**
+ * Check if the message sent by the current user should be ignored.
+ * @param {*} sender 
+ * @returns 
+ */
+export const shouldIgnoreOwnMessage = (sender) => {
     // Ignore fish sent by the current user. Cuz the server will send to all users in the room, even the current user. 
-    if (sender === localStorage.getItem('catId')) {
+    if (sender === UI.catId.textContent) {
         //note: It is possible to update the status of the sent message, without the need for the server to send another response. 
         // Issue: Reliability. Others may not receive it because of a connection, network error, or something else.
-        return;
+        return true;
     }
-
-    const { roomId, fishEncrypt, id } = fish;
-
-    let fishText = '';
-    try {
-        const AESkeyBase64 = localStorage.getItem(roomId);
-        const AESkey = await importAESKey(AESkeyBase64);
-        fishText = await decryptMsg(AESkey, fishEncrypt);
-    } catch (error) {
-        console.error("Error decrypting message", error);
-    }
-
-    try {
-        await saveFish(fish);
-    } catch (error) {
-        console.error("Error saving message to the database: ", error);
-    }
-    const fishDivId = `${roomId}${id}`;
-    renderFish('received', fishDivId, fishText);
-}
-
-export const handlePendingFish = async (fish) => {
-    const { sender, roomId } = fish;
-
-    addFishList('pending', sender);
-
-    try {
-        await addRoom(roomId, 'pending', sender);
-        await saveFish(fish);
-    } catch (error) {
-        console.error("Error saving message to the database: ", error);
-    }
-}
-
-export const handleStartPMStatus = async (res) => {
-    const { roomId, publicKey, receiver } = res;
-    // Update the URL without reloading the page
-    try {
-        generateSharedAESKey(roomId, publicKey);
-    } catch (error) {
-        showToast(error.message, 'error');
-        console.error('Error generating shared AES key:', error);
-        return;
-    }
-
-    UI.fishTank.innerHTML = '';
-    UI.basketTitle.textContent = receiver;
-    UI.fishInput.focus();
-    addFishList('active', receiver);
-    await updateRoom(roomId, 'active', receiver);
-    showToast('New chat started!', 'success');
+    return false;
 }
 
 //### UI Extension Functions
-const renderFish = (type, fishDivId, message = '') => {
+export const renderFish = (type, fishKey, message = '') => {
     // Validate the message type
     if (type !== 'sent' && type !== 'received') {
         throw new Error(`Invalid message type: ${type}. It should be 'sent' or 'received'.`);
@@ -213,12 +207,11 @@ const renderFish = (type, fishDivId, message = '') => {
 
     const poisition = type === 'sent' ? 'right' : 'left';
     const { fishInput, fishTank, fishWrapper } = UI;
-    const fish_text = fishInput.value;
 
     // Create a new div for fish message
-    const fishDiv = document.createElement('div');
-    fishDiv.className = `fish-${poisition}`;
-    fishDiv.id = fishDivId;
+    const fishItem = document.createElement('div');
+    fishItem.className = `fish-${poisition}`;
+    fishItem.id = fishKey;
 
     const bubble = document.createElement('div');
     bubble.className = `bubble-${poisition}`;
@@ -228,11 +221,12 @@ const renderFish = (type, fishDivId, message = '') => {
     fishText.className = "fish-text";
 
     if (type === 'sent') {
+        const fish_text = fishInput.value;
         fishText.innerText = fish_text.trimEnd();
         const status = document.createElement('span');
         status.className = "bubble-status";
         status.textContent = "Delivered";
-        fishDiv.appendChild(status);
+        fishItem.appendChild(status);
         // Clear the input field
         fishInput.value = '';
     } else {
@@ -240,42 +234,24 @@ const renderFish = (type, fishDivId, message = '') => {
     }
 
     bubble.appendChild(fishText);
-    fishDiv.prepend(bubble);
+    fishItem.prepend(bubble);
 
     // Add the new fish message to the chat box
-    fishTank.appendChild(fishDiv);
+    fishTank.appendChild(fishItem);
     // Scroll to the bottom of the chat box
     fishWrapper.scrollTop = fishWrapper.scrollHeight;
 }
 
-/**
- * Prepare and send fish to the server.
- * @returns Key of messages in the database
- */
-const sendFish = async () => {
-    const sender = localStorage.getItem('catId');
-    const receiver = UI.basketTitle.textContent;
-    const fishInfo = {
-        text: UI.fishInput.value,
-        sender: sender,
-        receiver: receiver,
-        roomId: `${[sender, receiver].sort().join('-')}`
-    }
-    return await sendFishToServer(fishInfo);
-}
-
-const addFishList = async (type, title) => {
+export const addFishList = async (type, title) => {
     if (type !== 'pending' && type !== 'active') {
         throw new Error(`Invalid message list type: ${type}. It should be 'pending' or 'active'.`);
     }
     // Check if the fish is already in the list
     if (isDuplicate(type, title)) {
-        console.log("Fish is already in the list");
         return;
     }
-    console.log("Run down error");
 
-    const { pendingFishes, fishBaskets } = UI;
+    const { pendingFishes, fishBaskets, pendingBadge } = UI;
 
     const li = document.createElement("li");
     li.className = "w-full rounded-md hover:bg-gray-700 p-1";
@@ -288,7 +264,10 @@ const addFishList = async (type, title) => {
     li.appendChild(a);
 
     const Add = {
-        pending: () => pendingFishes.prepend(li),
+        pending: () => {
+            pendingFishes.prepend(li);
+
+        },
         active: () => fishBaskets.prepend(li)
     };
 
@@ -308,4 +287,12 @@ const isDuplicate = (type, title) => {
 
     return list.some(item => item.querySelector('a').textContent === title);
 }
+
+export const newChat = (receiver) => {
+    UI.fishTank.innerHTML = '';
+    UI.basketTitle.textContent = receiver;
+    UI.fishInput.focus();
+    addFishList('active', receiver);
+}
+
 
