@@ -1,62 +1,16 @@
-let ECDHkeypairModule, WebSocketModule, ChatModule, ChatUI, ChatWS, ChatHistory; // Declare modules to be used later
+await import('/assets/js/utils/utils.js');
+await import('/assets/js/utils/toast.js');
+const User = (await import('/assets/js/m/user/user.model.js')).default;
+const WebSocket = (await import('/assets/js/core/websocket.js')).default;
+const ChatController = await import('/assets/js/m/chat/chat.controller.js');
 
-try {
-    const res = await fetch('/api/id', { credentials: 'include' });
-    const { hasInit, catId } = await res.json();
-    await import('/assets/js/m/toast.js');// Import toast module for notifications
+async function bootstrap() {
+    const { user, isUserCreated } = await User.getOrCreate();
+    const socket = new WebSocket();
 
-    if (!hasInit) {
-        try {
-            ECDHkeypairModule = await import('/assets/js/core/ECDHkeypair.js');
-            ECDHkeypairModule.InitECDH(); // Initialize ECDH key pair, register public key, and store private key in local storage
-        } catch (error) {
-            console.error('Error importing keyPair or init:', error.message);
-            throw new Error('Initialization failed!');
-        }
-    } else {
-        // Update, synchronize with cookies
-        localStorage.setItem('catId', catId);
-    }
+    ChatController.Init(user, socket, isUserCreated);
 
-    try {
-        await import('/assets/libs/socket.io.min.js');
-        WebSocketModule = await import('/assets/js/core/websocket.js');
-    } catch (error) {
-        console.error('Error importing websocket:', error.message);
-        throw new Error('Error importing websocket');
-    }
-    // Import chat history
-    try {
-        ChatHistory = await import('/assets/js/m/history/chat-history.js');
-    } catch (error) {
-        console.error('Error importing chat history:', error.message);
-        throw new Error('Chat history functionality failed!');
-    }
-
-    // Proceed with chat functionality
-    try {
-        ChatModule = await import('/assets/js/m/chat/chat.js');
-        ChatUI = await import('/assets/js/m/chat/chat.ui.js');
-        ChatWS = await import('/assets/js/m/chat/chat.ws.js');
-    } catch (error) {
-        console.error('Error importing chat:', error.message);
-        throw new Error('Chat functionality failed!');
-    }
-
-
-
-
-    const socket = WebSocketModule.ConnectSocket(); // Initialize WebSocket connection
-    WebSocketModule.InitEvents(socket); // Initialize WebSocket events
-    ChatModule.setSocket(socket); // Assign socket to Chat module
-
-    await ChatHistory.initDB(hasInit);
-
-    ChatUI.InitUI(socket);
-    ChatWS.InitEvents(socket); // Initialize WebSocket events for chat
-
-} catch (error) {
-    console.error('App bootstrapping failed:', error.message);
-} finally {
-    import('/assets/js/load_animation.js');
 }
+bootstrap();
+
+

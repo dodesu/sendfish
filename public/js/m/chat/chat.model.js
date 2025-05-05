@@ -1,8 +1,8 @@
 import { openDB } from 'https://cdn.jsdelivr.net/npm/idb@8/+esm';
 
 let db = null;
-export const initDB = async (hasInit) => {
-    if (!hasInit) {
+export const InitDB = async (isUserCreated) => {
+    if (isUserCreated) {
         indexedDB.deleteDatabase('chat-history');
     }
 
@@ -25,7 +25,7 @@ export const saveFish = async (fish) => {
     }
 }
 
-export const genId = async (roomId) => {
+export const countMessagesInRoom = async (roomId) => {
     return await db.countFromIndex('messages', 'roomId', roomId);
 }
 

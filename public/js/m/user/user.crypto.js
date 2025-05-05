@@ -1,3 +1,4 @@
+import { binaryToBase64, base64ToBinary } from "../../utils/utils.js";
 export async function InitECDH() {
 
     const KEY_PAIR = await generateECDHKeyPair();//the first time visit web
@@ -26,12 +27,13 @@ export async function InitECDH() {
         }
 
         const data = await res.json();
-        //reuse in other tab or reload
-        console.log(`ID = ${data.cat_id}`);
-        localStorage.setItem('publicKey', publicKey);
-        localStorage.setItem('privateKey', privateKey);
-        localStorage.setItem('catId', data.cat_id);
-        //Fix: Crypt private key before storage it(IndexedDB instead).
+
+        return {
+            publicKey: publicKey,
+            privateKey: privateKey,
+            catId: data.cat_id
+        };
+
     } catch (error) {
         throw error;
     }
@@ -54,27 +56,13 @@ const generateECDHKeyPair = async () => {
 }
 
 /**
- * Encode SPKI public key to base64, and vice versa (with 2nd param). 
- * @param {ArrayBuffer|Base64} value 
- * @param {boolean} isEncode
- * @returns 
- */
-export const base64Converter = (value, isEncode = true) => {
-    if (isEncode) {
-        return btoa(String.fromCharCode(...new Uint8Array(value)));
-    }
-
-    return Uint8Array.from(atob(value), c => c.charCodeAt(0));
-}
-
-/**
  * Serialize public key to base64. Before start exchanging the public key.
  * @param {CryptoKey} publicKey 
  * @returns Base64 public key from spki format.
  */
 export const exportPublicKey = async publicKey => {
     const exported = await crypto.subtle.exportKey("spki", publicKey);
-    return base64Converter(exported); // => Base64
+    return binaryToBase64(exported); // => Base64
 }
 
 /**
@@ -83,7 +71,7 @@ export const exportPublicKey = async publicKey => {
  * @returns {CryptoKey}
  */
 export const importPublicKey = async base64Key => {
-    const binaryKey = base64Converter(base64Key, false);
+    const binaryKey = base64ToBinary(base64Key);
     return await crypto.subtle.importKey(
         "spki",
         binaryKey.buffer,

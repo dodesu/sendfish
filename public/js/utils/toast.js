@@ -1,14 +1,14 @@
 export function showToast(message = "Thông điệp mặc định", type = "info") {
-    const toast = document.createElement("div");
-    toast.className = `
+  const toast = document.createElement("div");
+  toast.className = `
     max-w-md w-full bg-gray-900 border shadow-lg rounded-xl p-4 flex items-start gap-3 animate-slide-down-fade-in
     ${type === 'success' ? 'border-green-300 text-green-600' :
-            type === 'error' ? 'border-red-300 text-red-600' :
-                type === 'warning' ? 'border-yellow-700 text-yellow-500' :
-                    'border-blue-300 text-purple-500'}
+      type === 'error' ? 'border-red-300 text-red-600' :
+        type === 'warning' ? 'border-yellow-700 text-yellow-500' :
+          'border-blue-300 text-purple-500'}
                     `;
 
-    toast.innerHTML = `
+  toast.innerHTML = `
     <div class="mt-1">
       <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -26,10 +26,10 @@ export function showToast(message = "Thông điệp mặc định", type = "info
     </button>
   `;
 
-    document.getElementById("toast-container").appendChild(toast);
+  document.getElementById("toast-container").appendChild(toast);
 
-    // Auto remove after 4s
-    setTimeout(() => {
-        toast.remove();
-    }, 4000);
+  // Auto remove after 4s
+  setTimeout(() => {
+    toast.remove();
+  }, 4000);
 }
