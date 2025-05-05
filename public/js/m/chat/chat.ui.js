@@ -146,7 +146,7 @@ const handlePendingFishClick = (e, updateRoom) => {
             togglePendingFish();
         }
         pendingFishes.removeChild(clickedLink);
-
+        togglePendingBadge();
 
         const partner = clickedLink.querySelector("a").textContent;
         addFishList('active', partner);
@@ -266,7 +266,7 @@ export const addFishList = async (type, title) => {
     const Add = {
         pending: () => {
             pendingFishes.prepend(li);
-
+            togglePendingBadge();
         },
         active: () => fishBaskets.prepend(li)
     };
@@ -295,4 +295,18 @@ export const newChat = (receiver) => {
     addFishList('active', receiver);
 }
 
-
+/**
+ * Toggle the pending badge based on the number of pending fish
+ * @description
+ *  - If there are no pending fish, hide the badge
+ *  - If there are pending fish, show the badge and update the text content
+ */
+const togglePendingBadge = () => {
+    const size = UI.pendingFishes.querySelectorAll('li').length;
+    UI.pendingBadge.textContent = size;
+    if (size === 0) {
+        UI.pendingBadge.classList.add('hidden');
+    } else {
+        UI.pendingBadge.classList.remove('hidden');
+    }
+};
