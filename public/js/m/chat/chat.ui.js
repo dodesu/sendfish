@@ -1,16 +1,11 @@
 import { showToast } from "../../utils/toast.js";
-// import {
-//     generateSharedAESKey,
-//     sendFish as sendFishToServer,
-//     importAESKey
-// } from "./chat.js";
-// import { saveFish, addRoom, updateRoom, getRoomsByType } from "../history/chat-history.js";
-
 
 const UI = {
     newBtn: document.querySelector('#new-fish'),
     fishTank: document.querySelector('#fish-tank'),
     catId: document.querySelector('#cat-id').querySelector('span'),
+    copyCatIdBtn: document.querySelector('#copy-cat-id'),
+
     basketTitle: document.querySelector('#basket-title'),
     fishInput: document.querySelector('#fish-input'),
     fishWrapper: document.querySelector('#fish-wrapper'),
@@ -24,18 +19,25 @@ const UI = {
     fishBaskets: document.querySelector('#fish-baskets'),
 };
 
-export const loadActiveChats = async (activeChats) => {
-    activeChats?.forEach(chat => {
-        addFishList('active', chat.partner);
-    });
-}
-
+/**
+ * Initializes the chat UI components.
+ * 
+ * - Displays the cat ID.
+ * - Toggles showing pending list on click.
+ * Called by the controller.
+ */
 export const InitUI = () => {
     UI.catId.textContent
         = localStorage.getItem('catId') || 'Unknown Cat ID';
     UI.pendingFishBtn.addEventListener('click', togglePendingFish);
-
+    UI.copyCatIdBtn.addEventListener('click', handleCopyIDClick);
 }
+
+/**
+ * Controller event binding to set up the UI event handlers
+ * Called by the controller
+ * @param {*} handlers from controller
+ */
 export const bindEventUI = (handlers) => {
     UI.newBtn.addEventListener('click', () => handleAddFishBasket(handlers.startPM));
 
@@ -47,19 +49,22 @@ export const bindEventUI = (handlers) => {
     UI.pendingFishes.addEventListener('click',
         event => handlePendingFishClick(event, handlers.updateRoom));
 }
-export const loadingCompleted = () => {
-    const loader = document.querySelector('#loader');
-    const width = window.innerWidth;
-    const height = window.innerHeight;
-    const diagonal = Math.sqrt(width ** 2 + height ** 2);
-    const circle = document.querySelector('.circle');
 
-    const deriveScale = diagonal / circle.scrollWidth;
-    circle.style.transform = `scale(${deriveScale})`;
-    setTimeout(() => { loader.remove() }, 700);
+export const loadChats = (type, chats) => {
+    chats?.forEach(chat => {
+        addFishList(type, chat.partner);
+    });
 }
 
-//### UI Event Handlers
+//#### High-level, handler functions
+
+/**
+ * Handles the new fish basket button click, which shows an input text field instead of the button.
+ * The input field is given focus and the user can type in a cat ID.
+ * If the user presses enter, call the startPM function with the input value.
+ * If the user clicks outside the input field or presses escape, the input field is replaced with the button again.
+ * @param {function} startPM function is injected via controller
+*/
 function handleAddFishBasket(startPM) {
     const currentSpan = document.querySelector('#span-new-fish');
     if (!currentSpan) return;
@@ -101,6 +106,13 @@ function handleAddFishBasket(startPM) {
     input.focus();
 }
 
+/**
+ * Handles the send fish action triggered by either pressing 'Enter' or clicking the send button.
+ * Validates input and ensures a chat session is active before sending the fish message.
+ * 
+ * @param {Event} e
+ * @param {Function} sendFish - Send message to server. Injected via controller
+ */
 const handleSendFish = async (e, sendFish) => {
     const { fishInput, basketTitle, catId } = UI;
     const type = e.type;
@@ -137,6 +149,11 @@ const handleSendFish = async (e, sendFish) => {
 
 }
 
+/**
+ * Handles a click on a pending fish link. Removes the link from the pending list, adds it to the active list. Updates the room type.
+ * @param {Event} e
+ * @param {Function} updateRoom - ChatModel.updateRoom injected via controller, updates the room type (pending -> active)
+ */
 const handlePendingFishClick = (e, updateRoom) => {
     const { pendingFishes, pendingBadge, catId } = UI;
     const clickedLink = e.target.closest("li");
@@ -146,7 +163,7 @@ const handlePendingFishClick = (e, updateRoom) => {
             togglePendingFish();
         }
         pendingFishes.removeChild(clickedLink);
-
+        togglePendingBadge();
 
         const partner = clickedLink.querySelector("a").textContent;
         addFishList('active', partner);
@@ -158,33 +175,22 @@ const handlePendingFishClick = (e, updateRoom) => {
     }
 }
 
-function togglePendingFish() {
-    const { pendingFishes, fishBaskets } = UI;
+//####  Event handlers UI use on self
+const handleCopyIDClick = () => {
+    navigator.clipboard.writeText(UI.catId.textContent);
+    const info = document.createElement('span')
+    info.textContent = 'Copied!';
 
-    const sizeList = pendingFishes.querySelectorAll('li').length;
-    if (sizeList >= 1) {
-        pendingFishes.classList.toggle("hidden");
-    }
-    if (sizeList < 3) {
-        return;
-    }
-
-
-    //response fishBaskets
-    const large = 'max-h-[78%]';
-    const small = 'max-h-[58%]';
-    // Check current class
-    const from = fishBaskets.classList.contains(large) ? large : small;
-    const to = from === large ? small : large;
-
-    fishBaskets.classList.replace(from, to);
-
+    UI.copyCatIdBtn.appendChild(info);
+    setTimeout(() => {
+        UI.copyCatIdBtn.removeChild(info);
+    }, 500);
 }
 
-//### WS Event Handlers
-
+//####  Export Functions called by controller
 /**
  * Check if the message sent by the current user should be ignored.
+ * Called by controller when handling Websocket event 'sendFish'
  * @param {*} sender 
  * @returns 
  */
@@ -197,8 +203,6 @@ export const shouldIgnoreOwnMessage = (sender) => {
     }
     return false;
 }
-
-//### UI Extension Functions
 export const renderFish = (type, fishKey, message = '') => {
     // Validate the message type
     if (type !== 'sent' && type !== 'received') {
@@ -266,7 +270,7 @@ export const addFishList = async (type, title) => {
     const Add = {
         pending: () => {
             pendingFishes.prepend(li);
-
+            togglePendingBadge();
         },
         active: () => fishBaskets.prepend(li)
     };
@@ -276,7 +280,39 @@ export const addFishList = async (type, title) => {
 }
 
 /**
- * Check if the chat is already in the list
+ * Update the UI for a new chat. Clear the chat box, set the title, and focus on the input field
+ * Called by: ChatService.handleStartPMStatus (injected via Controller)
+ * Triggered indirectly by: WebSocket event 'startPMStatus'
+ * @param {*} receiver set the title
+ */
+export const newChat = (receiver) => {
+    UI.fishTank.innerHTML = '';
+    UI.basketTitle.textContent = receiver;
+    UI.fishInput.focus();
+    addFishList('active', receiver);
+}
+
+//### UI Helper Functions
+/**
+ * Toggle the pending badge based on the number of pending chats
+ * @description
+ *  - If there are no pending chats, hide the badge
+ *  - If there are pending chats, show the badge and update the text content
+ * Called by: addFishList, handlePendingFishClick
+ */
+const togglePendingBadge = () => {
+    const size = UI.pendingFishes.querySelectorAll('li').length;
+    UI.pendingBadge.textContent = size;
+    if (size === 0) {
+        UI.pendingBadge.classList.add('hidden');
+    } else {
+        UI.pendingBadge.classList.remove('hidden');
+    }
+};
+
+/**
+ * Check if the chat is already in the list.
+ * Called by: addFishList
  * @param {string} type pending | active
  * @param {string} title partner id
  * @returns 
@@ -288,11 +324,44 @@ const isDuplicate = (type, title) => {
     return list.some(item => item.querySelector('a').textContent === title);
 }
 
-export const newChat = (receiver) => {
-    UI.fishTank.innerHTML = '';
-    UI.basketTitle.textContent = receiver;
-    UI.fishInput.focus();
-    addFishList('active', receiver);
+/**
+ * Toggles the visibility of the pending fish list and adjusts the size of the fish baskets.
+ * 
+ * - If there is at least one pending fish, toggles the hidden class on the pending fish list.
+ * - If there are fewer than three pending fish, exits early without adjusting the fish baskets.
+ * - Otherwise, switches the fish baskets between a large and small maximum height class.
+ */
+function togglePendingFish() {
+    const { pendingFishes, fishBaskets } = UI;
+
+    const sizeList = pendingFishes.querySelectorAll('li').length;
+    if (sizeList >= 1) {
+        pendingFishes.classList.toggle("hidden");
+    }
+    if (sizeList < 3) {
+        return;
+    }
+
+
+    //response fishBaskets
+    const large = 'max-h-[78%]';
+    const small = 'max-h-[58%]';
+    // Check current class
+    const from = fishBaskets.classList.contains(large) ? large : small;
+    const to = from === large ? small : large;
+
+    fishBaskets.classList.replace(from, to);
+
 }
 
+export const loadingCompleted = () => {
+    const loader = document.querySelector('#loader');
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    const diagonal = Math.sqrt(width ** 2 + height ** 2);
+    const circle = document.querySelector('.circle');
 
+    const deriveScale = diagonal / circle.scrollWidth;
+    circle.style.transform = `scale(${deriveScale})`;
+    setTimeout(() => { loader.remove() }, 700);
+}
