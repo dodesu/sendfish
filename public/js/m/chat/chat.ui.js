@@ -48,9 +48,9 @@ export const bindEventUI = (handlers) => {
         event => handlePendingFishClick(event, handlers.updateRoom));
 }
 
-export const loadActiveChats = async (activeChats) => {
-    activeChats?.forEach(chat => {
-        addFishList('active', chat.partner);
+export const loadChats = (type, chats) => {
+    chats?.forEach(chat => {
+        addFishList(type, chat.partner);
     });
 }
 

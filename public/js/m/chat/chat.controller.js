@@ -19,7 +19,9 @@ export const Init = async (user, socket, isUserCreated) => {
     ChatUI.InitUI();
     setUpEventUI();
     const activeChats = await ChatModel.getRoomsByType('active');
-    ChatUI.loadActiveChats(activeChats);
+    const pendingChats = await ChatModel.getRoomsByType('pending');
+    ChatUI.loadChats('active', activeChats);
+    ChatUI.loadChats('pending', pendingChats);
     ChatUI.loadingCompleted();
 }
 
