@@ -4,6 +4,8 @@ const UI = {
     newBtn: document.querySelector('#new-fish'),
     fishTank: document.querySelector('#fish-tank'),
     catId: document.querySelector('#cat-id').querySelector('span'),
+    copyCatIdBtn: document.querySelector('#copy-cat-id'),
+
     basketTitle: document.querySelector('#basket-title'),
     fishInput: document.querySelector('#fish-input'),
     fishWrapper: document.querySelector('#fish-wrapper'),
@@ -28,7 +30,7 @@ export const InitUI = () => {
     UI.catId.textContent
         = localStorage.getItem('catId') || 'Unknown Cat ID';
     UI.pendingFishBtn.addEventListener('click', togglePendingFish);
-
+    UI.copyCatIdBtn.addEventListener('click', handleCopyIDClick);
 }
 
 /**
@@ -171,6 +173,18 @@ const handlePendingFishClick = (e, updateRoom) => {
         const roomId = `${[currentId, partner].sort().join('-')}`;
         updateRoom(roomId, 'active', partner);
     }
+}
+
+//####  Event handlers UI use on self
+const handleCopyIDClick = () => {
+    navigator.clipboard.writeText(UI.catId.textContent);
+    const info = document.createElement('span')
+    info.textContent = 'Copied!';
+
+    UI.copyCatIdBtn.appendChild(info);
+    setTimeout(() => {
+        UI.copyCatIdBtn.removeChild(info);
+    }, 500);
 }
 
 //####  Export Functions called by controller
