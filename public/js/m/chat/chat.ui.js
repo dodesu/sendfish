@@ -144,7 +144,7 @@ const handleSendFish = async (e, sendFish) => {
         } catch (error) {
             console.error(error);
         }
-        renderFish('sent', fishKey);
+        renderFish('sent', fishKey, fishInput.value.trimEnd());
     }
 
 }
@@ -225,8 +225,7 @@ export const renderFish = (type, fishKey, message = '') => {
     fishText.className = "fish-text";
 
     if (type === 'sent') {
-        const fish_text = fishInput.value;
-        fishText.innerText = fish_text.trimEnd();
+        fishText.innerText = message;
         const status = document.createElement('span');
         status.className = "bubble-status";
         status.textContent = "Delivered";
@@ -234,7 +233,7 @@ export const renderFish = (type, fishKey, message = '') => {
         // Clear the input field
         fishInput.value = '';
     } else {
-        fishText.innerText = message.trimEnd();
+        fishText.innerText = message;
     }
 
     bubble.appendChild(fishText);
