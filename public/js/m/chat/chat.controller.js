@@ -7,6 +7,7 @@ const {
     bindEventWS,
     setSocket } = await import('/assets/js/core/ws.handler.js');
 import { showToast } from '../../utils/toast.js';
+import { deriveRoomId } from '../../utils/utils.js';
 
 let User = null;
 let Socket = null;
@@ -27,13 +28,38 @@ export const Init = async (user, socket, isUserCreated) => {
     ChatUI.loadChats('active', activeChats);
     ChatUI.loadChats('pending', pendingChats);
     ChatUI.loadingCompleted();
+
+}
+
+/**
+ * Handles loading a chat room by rendering all the messages in the room
+ * @param {string} partner
+ * @returns {Promise<void>}
+ */
+const onpenChat = async (partner) => {
+    const current = User.getId();
+    const roomId = deriveRoomId(current, partner);
+
+    console.log('roomId = ', roomId);
+    const messages = await ChatModel.getChats(roomId);
+    for (const msg of messages) {
+        const text = await ChatService.decryptFish(roomId, msg.fishEncrypted);
+        const fishKey = `${roomId}${msg.id}`;
+        if (msg.sender === current) {
+            ChatUI.renderFish('sent', fishKey, text);
+        }
+        else {
+            ChatUI.renderFish('received', fishKey, text);
+        }
+    }
 }
 
 const setUpEventUI = () => {
     const handlers = {
         startPM: ChatService.startPM,
         sendFish: ChatService.sendFish,
-        updateRoom: ChatModel.updateRoom
+        updateRoom: ChatModel.updateRoom,
+        openChat: onpenChat,
     };
     ChatUI.bindEventUI(handlers);
 }

@@ -13,6 +13,7 @@ export const InitDB = async (isUserCreated) => {
 
             const messagesStore = db.createObjectStore('messages');
             messagesStore.createIndex('roomId', 'roomId', { unique: false });
+            messagesStore.createIndex('roomId_id', ['roomId', 'id']);
         }
     });
 }
@@ -64,5 +65,23 @@ export const delRoom = async (roomId) => {
         await db.delete('rooms', roomId);
     } catch (error) {
         console.error(error);
+    }
+}
+
+/**
+ * Get all messages in a room by roomId, sort by id
+ * @param {string} roomId
+ * @returns {Promise<Message[]>}
+ */
+export const getChats = async (roomId) => {
+    try {
+        const index = db.transaction('messages').store.index('roomId_id');
+        const range = IDBKeyRange.bound([roomId], [roomId, '\uffff']);
+        const messages = await index.getAll(range);
+
+        return messages;
+    } catch (error) {
+        console.error(error);
+        return null;
     }
 }

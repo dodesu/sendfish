@@ -48,6 +48,9 @@ export const bindEventUI = (handlers) => {
 
     UI.pendingFishes.addEventListener('click',
         event => handlePendingFishClick(event, handlers.updateRoom));
+
+    UI.fishBaskets.addEventListener('click',
+        event => handleActiveFishClick(event, handlers.openChat));
 }
 
 export const loadChats = (type, chats) => {
@@ -155,7 +158,7 @@ const handleSendFish = async (e, sendFish) => {
  * @param {Function} updateRoom - ChatModel.updateRoom injected via controller, updates the room type (pending -> active)
  */
 const handlePendingFishClick = (e, updateRoom) => {
-    const { pendingFishes, pendingBadge, catId } = UI;
+    const { pendingFishes, catId } = UI;
     const clickedLink = e.target.closest("li");
     if (clickedLink && pendingFishes.contains(clickedLink)) {
         e.preventDefault();
@@ -172,6 +175,18 @@ const handlePendingFishClick = (e, updateRoom) => {
         const currentId = catId.textContent;
         const roomId = `${[currentId, partner].sort().join('-')}`;
         updateRoom(roomId, 'active', partner);
+    }
+}
+
+const handleActiveFishClick = (e, openChat) => {
+    const { fishBaskets } = UI;
+    const clickedLink = e.target.closest("li");
+    if (clickedLink && fishBaskets.contains(clickedLink)) {
+        e.preventDefault();
+        const partner = clickedLink.querySelector("a").textContent;
+        openChat(partner);
+        newChat(partner); //fix: should create a new func for this
+        //note: animation loading should be added 
     }
 }
 
@@ -258,6 +273,7 @@ export const addFishList = async (type, title) => {
 
     const li = document.createElement("li");
     li.className = "w-full rounded-md hover:bg-gray-700 p-1";
+    li.dataset.roomId = `${[UI.catId.textContent, title].sort().join('-')}`;
 
     const a = document.createElement("a");
     a.href = "#";
