@@ -31,39 +31,6 @@ export const Init = async (user, socket, isUserCreated) => {
 
 }
 
-/**
- * Handles loading a chat room by rendering all the messages in the room
- * @param {string} partner
- * @returns {Promise<void>}
- */
-const onpenChat = async (partner) => {
-    const current = User.getId();
-    const roomId = deriveRoomId(current, partner);
-
-    console.log('roomId = ', roomId);
-    const messages = await ChatModel.getChats(roomId);
-    for (const msg of messages) {
-        const text = await ChatService.decryptFish(roomId, msg.fishEncrypted);
-        const fishKey = `${roomId}${msg.id}`;
-        if (msg.sender === current) {
-            ChatUI.renderFish('sent', fishKey, text);
-        }
-        else {
-            ChatUI.renderFish('received', fishKey, text);
-        }
-    }
-}
-
-const setUpEventUI = () => {
-    const handlers = {
-        startPM: ChatService.startPM,
-        sendFish: ChatService.sendFish,
-        updateRoom: ChatModel.updateRoom,
-        openChat: onpenChat,
-    };
-    ChatUI.bindEventUI(handlers);
-}
-
 const InitEventWS = () => {
     InitBasicEventWS();
     const handlers = {
@@ -124,5 +91,37 @@ export const handlePendingFish = async (fish) => {
         await ChatModel.saveFish(fish);
     } catch (error) {
         console.error("Error saving message to the database: ", error);
+    }
+}
+
+const setUpEventUI = () => {
+    const handlers = {
+        startPM: ChatService.startPM,
+        sendFish: ChatService.sendFish,
+        updateRoom: ChatModel.updateRoom,
+        openChat: onpenChat,
+    };
+    ChatUI.bindEventUI(handlers);
+}
+/**
+ * Handles loading a chat room by rendering all the messages in the room
+ * @param {string} partner
+ * @returns {Promise<void>}
+ */
+const onpenChat = async (partner) => {
+    const current = User.getId();
+    const roomId = deriveRoomId(current, partner);
+
+    console.log('roomId = ', roomId);
+    const messages = await ChatModel.getChats(roomId);
+    for (const msg of messages) {
+        const text = await ChatService.decryptFish(roomId, msg.fishEncrypted);
+        const fishKey = `${roomId}${msg.id}`;
+        if (msg.sender === current) {
+            ChatUI.renderFish('sent', fishKey, text);
+        }
+        else {
+            ChatUI.renderFish('received', fishKey, text);
+        }
     }
 }
