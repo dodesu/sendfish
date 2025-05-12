@@ -157,7 +157,7 @@ const handleSendFish = async (e, sendFish) => {
  * @param {Event} e
  * @param {Function} updateRoom - ChatModel.updateRoom injected via controller, updates the room type (pending -> active)
  */
-const handlePendingFishClick = (e, updateRoom) => {
+const handlePendingFishClick = (e, processingOpenChat) => {
     const { pendingFishes, catId } = UI;
     const clickedLink = e.target.closest("li");
     if (clickedLink && pendingFishes.contains(clickedLink)) {
@@ -174,7 +174,7 @@ const handlePendingFishClick = (e, updateRoom) => {
         // Update the room
         const currentId = catId.textContent;
         const roomId = `${[currentId, partner].sort().join('-')}`;
-        updateRoom(roomId, 'active', partner);
+        processingOpenChat(partner, roomId);
     }
 }
 

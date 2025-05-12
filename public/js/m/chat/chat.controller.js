@@ -11,6 +11,7 @@ import { deriveRoomId } from '../../utils/utils.js';
 
 let User = null;
 let Socket = null;
+let pendingStartPMRequest = [];
 export const Init = async (user, socket, isUserCreated) => {
     User = user;
     Socket = socket;
@@ -58,6 +59,10 @@ const handleStartPMStatus = (res) => {
     } catch (error) {
         showToast(error.message, 'error');
     }
+    pendingStartPMRequest[roomId]?.();// Resolve the promise
+    delete pendingStartPMRequest[roomId];
+    // improve later
+
     showToast('New chat started!', 'success');
 }
 
@@ -98,21 +103,21 @@ const setUpEventUI = () => {
     const handlers = {
         startPM: ChatService.startPM,
         sendFish: ChatService.sendFish,
-        updateRoom: ChatModel.updateRoom,
-        openChat: onpenChat,
+        updateRoom: processingOpenChat,
+        openChat: openChat,
     };
     ChatUI.bindEventUI(handlers);
 }
 /**
- * Handles loading a chat room by rendering all the messages in the room
+ * Handles loading a chat room by rendering all the messages in the room.
+ * Case: User already exchanged public keys, and has AES key. 
  * @param {string} partner
  * @returns {Promise<void>}
  */
-const onpenChat = async (partner) => {
+const openChat = async (partner) => {
     const current = User.getId();
     const roomId = deriveRoomId(current, partner);
 
-    console.log('roomId = ', roomId);
     const messages = await ChatModel.getChats(roomId);
     for (const msg of messages) {
         const text = await ChatService.decryptFish(roomId, msg.fishEncrypted);
@@ -124,4 +129,36 @@ const onpenChat = async (partner) => {
             ChatUI.renderFish('received', fishKey, text);
         }
     }
+    //Fix me: join room after all messages are loaded to ready chat now.
+}
+
+/**
+ * Initiates the process to open a chat with a partner by sending a startPM request
+ * to establish a new chat room, waiting for the chat setup to complete, and then
+ * loading the chat messages for the room.
+ *
+ * This function sends a 'startPM' request to initiate the creation of a chat room,
+ * waits for a response via the 'startPMStatus' WebSocket event to resolve the chat
+ * setup, and then opens the chat by loading all messages in the room. It also updates
+ * the room type to 'active' in the chat model once the chat is successfully opened.
+ *
+ * @param {string} partner - The ID of the chat partner to establish a chat with.
+ * @param {string} roomId - The unique identifier for the chat room.
+ * @returns {Promise<void>}
+ */
+
+const processingOpenChat = async (partner, roomId) => {
+    const chatResult = new Promise((resolve, reject) => {
+        ChatService.startPM(partner);
+        pendingStartPMRequest[roomId] = resolve;
+
+        setTimeout(() => {
+            reject();
+        }, 5000);
+        //Fix later: make reject sync with startPMStatus event
+    });
+    await chatResult;
+
+    await openChat(partner);
+    ChatModel.updateRoom(roomId, 'active', partner);
 }
