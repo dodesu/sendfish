@@ -170,6 +170,7 @@ const handlePendingFishClick = (e, processingOpenChat) => {
 
         const partner = clickedLink.querySelector("a").textContent;
         addFishList('active', partner);
+        setCurrentChat(partner);
 
         // Update the room
         const currentId = catId.textContent;
@@ -184,8 +185,10 @@ const handleActiveFishClick = (e, openChat) => {
     if (clickedLink && fishBaskets.contains(clickedLink)) {
         e.preventDefault();
         const partner = clickedLink.querySelector("a").textContent;
+        setCurrentChat(partner);
+        newChat(partner);
+        //fix: should create a new func for this - addFishList is unnecessary
         openChat(partner);
-        newChat(partner); //fix: should create a new func for this
         //note: animation loading should be added 
     }
 }
@@ -369,6 +372,23 @@ function togglePendingFish() {
 
 }
 
+/**
+ * Highlights the current chat partner in the fish baskets by adding a background class to the list item.
+ * @param {string} title - The ID of the chat partner to highlight.
+ */
+const setCurrentChat = (title) => {
+    const list = Array.from(UI.fishBaskets.querySelectorAll('li'));
+    const hightlight = 'bg-gray-700';
+
+    list.forEach(item => {
+        if (item.querySelector('a').textContent === title) {
+            item.classList.add(hightlight);
+        }
+        else {
+            item.classList.remove(hightlight);
+        }
+    });
+}
 export const loadingCompleted = () => {
     const loader = document.querySelector('#loader');
     const width = window.innerWidth;
