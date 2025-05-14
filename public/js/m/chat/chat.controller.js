@@ -114,9 +114,9 @@ const setUpEventUI = () => {
  * @param {string} partner
  * @returns {Promise<void>}
  */
-const openChat = async (partner) => {
+const openChat = async (roomId) => {
     const current = User.getId();
-    const roomId = deriveRoomId(current, partner);
+    //This ID may be incorrect if loading a chat archive
 
     const messages = await ChatModel.getChats(roomId);
     for (const msg of messages) {
@@ -158,11 +158,13 @@ const prepareChat = async (partner, roomId) => {
             //Fix later: make reject sync with startPMStatus event
         });
 
-        await chatResult.catch(() => {
+        try {
+            await chatResult
+        } catch (error) {
             console.error('Chat setup timed out.');
-        });
+        }
     }
 
-    await openChat(partner);
+    await openChat(roomId);
     ChatModel.updateRoom(roomId, 'active', partner);
 }

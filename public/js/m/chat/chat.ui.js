@@ -173,8 +173,7 @@ const handlePendingFishClick = async (e, prepareChat) => {
         setCurrentChat(partner);
 
         // Update the room
-        const currentId = catId.textContent;
-        const roomId = `${[currentId, partner].sort().join('-')}`;
+        const roomId = clickedLink.dataset.roomId;
         try {
             await prepareChat(partner, roomId);
         } catch (error) {
