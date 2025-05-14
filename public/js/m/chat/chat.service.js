@@ -97,8 +97,7 @@ export const decryptFish = async (roomId, fishEncrypted) => {
         const AESkey = await getAesKey(roomId);
         fishText = await decryptMessage(AESkey, fishEncrypted);
     } catch (error) {
-        console.error("Error decrypting message", error);
-        throw error;
+        throw new Error("Error decrypting message", { cause: error });
     }
     return fishText;
 }

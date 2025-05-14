@@ -178,8 +178,8 @@ const handlePendingFishClick = async (e, prepareChat) => {
         try {
             await prepareChat(partner, roomId);
         } catch (error) {
-            console.error(error);
-            showToast(error, 'error');
+            console.error(error.cause);
+            showToast(error.message, 'error');
         }
     }
 }
@@ -198,8 +198,8 @@ const handleActiveFishClick = async (e, prepareChat) => {
         try {
             await prepareChat(partner, roomId);
         } catch (error) {
-            console.error(error);
-            showToast(error, 'error');
+            console.error(error.cause);
+            showToast(error.message, 'error');
         }
     }
 }

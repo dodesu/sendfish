@@ -51,10 +51,10 @@ const InitEventWS = () => {
  * @param {string} res.receiver - The ID of the chat receiver.
  */
 
-const handleStartPMStatus = (res) => {
+const handleStartPMStatus = async (res) => {
     const { roomId, publicKey, receiver } = res;
     try {
-        ChatService.establishChatSharedKey(roomId, publicKey, receiver);
+        await ChatService.establishChatSharedKey(roomId, publicKey, receiver);
         ChatUI.newChat(receiver);
     } catch (error) {
         showToast(error.message, 'error');
@@ -159,7 +159,7 @@ const prepareChat = async (partner, roomId) => {
         });
 
         await chatResult.catch(() => {
-            throw new Error('Chat setup timed out.');
+            console.error('Chat setup timed out.');
         });
     }
 
