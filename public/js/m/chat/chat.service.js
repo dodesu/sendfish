@@ -1,4 +1,3 @@
-import { showToast } from "../../utils/toast.js";
 import {
     saveFish,
     addRoom,
@@ -31,10 +30,15 @@ export const startPM = async (receiver) => {
     Socket.emit('startPM', { sender: sender, receiver: receiver });
 }
 
-export const handleStartPMStatus = async (res, newChat) => {
-    const { roomId, publicKey, receiver } = res;
-    // Update the URL without reloading the page
-
+/**
+ * Generates a shared AES key for a given chat room, using the user's private key
+ * and the receiver's public key. Then save it.
+ * @param {string} roomId - The room ID
+ * @param {string} publicKey - The receiver's public key
+ * @param {string} receiver - The receiver's ID
+ * @returns {Promise<void>}
+ */
+export const establishChatSharedKey = async (roomId, publicKey, receiver) => {
     try {
         const privateKey = User.getPrivateKey(); //stringify
         if (!privateKey) {
@@ -47,19 +51,16 @@ export const handleStartPMStatus = async (res, newChat) => {
         const AESkeyBase64 = await generateSharedAESKey(privateKeyObj, publicKeyObj);
         localStorage.setItem(roomId, AESkeyBase64);
     } catch (error) {
-        showToast(error.message, 'error');
         console.error('Error generating shared AES key:', error);
-        return;
+        throw error;
     }
 
-
-    newChat(receiver);
     try {
         await addRoom(roomId, 'active', receiver);
     } catch (error) {
-        console.error(error);
+        console.error('Error adding room: ', error);
+        throw error;
     }
-    showToast('New chat started!', 'success');
 }
 
 export const sendFish = async (fishInfo) => {
@@ -96,7 +97,7 @@ export const decryptFish = async (roomId, fishEncrypted) => {
         const AESkey = await getAesKey(roomId);
         fishText = await decryptMessage(AESkey, fishEncrypted);
     } catch (error) {
-        console.error("Error decrypting message", error);
+        throw new Error("Error decrypting message", { cause: error });
     }
     return fishText;
 }

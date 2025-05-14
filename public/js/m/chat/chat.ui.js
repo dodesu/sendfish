@@ -47,7 +47,10 @@ export const bindEventUI = (handlers) => {
         event => handleSendFish(event, handlers.sendFish));
 
     UI.pendingFishes.addEventListener('click',
-        event => handlePendingFishClick(event, handlers.updateRoom));
+        event => handlePendingFishClick(event, handlers.prepareChat));
+
+    UI.fishBaskets.addEventListener('click',
+        event => handleActiveFishClick(event, handlers.prepareChat));
 }
 
 export const loadChats = (type, chats) => {
@@ -144,7 +147,7 @@ const handleSendFish = async (e, sendFish) => {
         } catch (error) {
             console.error(error);
         }
-        renderFish('sent', fishKey);
+        renderFish('sent', fishKey, fishInput.value.trimEnd());
     }
 
 }
@@ -154,8 +157,8 @@ const handleSendFish = async (e, sendFish) => {
  * @param {Event} e
  * @param {Function} updateRoom - ChatModel.updateRoom injected via controller, updates the room type (pending -> active)
  */
-const handlePendingFishClick = (e, updateRoom) => {
-    const { pendingFishes, pendingBadge, catId } = UI;
+const handlePendingFishClick = async (e, prepareChat) => {
+    const { pendingFishes, catId } = UI;
     const clickedLink = e.target.closest("li");
     if (clickedLink && pendingFishes.contains(clickedLink)) {
         e.preventDefault();
@@ -167,11 +170,36 @@ const handlePendingFishClick = (e, updateRoom) => {
 
         const partner = clickedLink.querySelector("a").textContent;
         addFishList('active', partner);
+        setCurrentChat(partner);
 
         // Update the room
-        const currentId = catId.textContent;
-        const roomId = `${[currentId, partner].sort().join('-')}`;
-        updateRoom(roomId, 'active', partner);
+        const roomId = clickedLink.dataset.roomId;
+        try {
+            await prepareChat(partner, roomId);
+        } catch (error) {
+            console.error(error.cause);
+            showToast(error.message, 'error');
+        }
+    }
+}
+
+const handleActiveFishClick = async (e, prepareChat) => {
+    const { fishBaskets } = UI;
+    const clickedLink = e.target.closest("li");
+    if (clickedLink && fishBaskets.contains(clickedLink)) {
+        e.preventDefault();
+        const partner = clickedLink.querySelector("a").textContent;
+        const roomId = clickedLink.dataset.roomId;
+        setCurrentChat(partner);
+        newChat(partner);
+        //fix: should create a new func for this - addFishList is unnecessary
+        //note: animation loading should be added  
+        try {
+            await prepareChat(partner, roomId);
+        } catch (error) {
+            console.error(error.cause);
+            showToast(error.message, 'error');
+        }
     }
 }
 
@@ -225,8 +253,7 @@ export const renderFish = (type, fishKey, message = '') => {
     fishText.className = "fish-text";
 
     if (type === 'sent') {
-        const fish_text = fishInput.value;
-        fishText.innerText = fish_text.trimEnd();
+        fishText.innerText = message;
         const status = document.createElement('span');
         status.className = "bubble-status";
         status.textContent = "Delivered";
@@ -234,7 +261,7 @@ export const renderFish = (type, fishKey, message = '') => {
         // Clear the input field
         fishInput.value = '';
     } else {
-        fishText.innerText = message.trimEnd();
+        fishText.innerText = message;
     }
 
     bubble.appendChild(fishText);
@@ -259,6 +286,7 @@ export const addFishList = async (type, title) => {
 
     const li = document.createElement("li");
     li.className = "w-full rounded-md hover:bg-gray-700 p-1";
+    li.dataset.roomId = `${[UI.catId.textContent, title].sort().join('-')}`;
 
     const a = document.createElement("a");
     a.href = "#";
@@ -354,6 +382,23 @@ function togglePendingFish() {
 
 }
 
+/**
+ * Highlights the current chat partner in the fish baskets by adding a background class to the list item.
+ * @param {string} title - The ID of the chat partner to highlight.
+ */
+const setCurrentChat = (title) => {
+    const list = Array.from(UI.fishBaskets.querySelectorAll('li'));
+    const hightlight = 'bg-gray-700';
+
+    list.forEach(item => {
+        if (item.querySelector('a').textContent === title) {
+            item.classList.add(hightlight);
+        }
+        else {
+            item.classList.remove(hightlight);
+        }
+    });
+}
 export const loadingCompleted = () => {
     const loader = document.querySelector('#loader');
     const width = window.innerWidth;

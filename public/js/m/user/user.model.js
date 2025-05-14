@@ -4,6 +4,7 @@ export default class User {
     #Id;
     #KeyPair = {};
     IdExpire;
+    #rooms = new Set();
 
     static async getOrCreate() {
         const res = await fetch('/api/id', { credentials: 'include' });
@@ -62,6 +63,18 @@ export default class User {
     }
     isExpried() {
         return Date.now() > (this.IdExpire ?? localStorage.getItem('IdExpire'));
+    }
+    getRooms() {
+        return this.#rooms;
+    }
+    addRoom(roomId) {
+        this.#rooms.add(roomId);
+    }
+    removeRoom(roomId) {
+        this.#rooms.delete(roomId);
+    }
+    isInRoom(roomId) {
+        return this.#rooms.has(roomId);
     }
 
 }
