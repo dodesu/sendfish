@@ -64,6 +64,7 @@ const handleStartPMStatus = (res) => {
     // improve later
 
     showToast('New chat started!', 'success');
+    User.addRoom(roomId);
 }
 
 const handleReceiveFish = async (fish) => {
@@ -103,8 +104,7 @@ const setUpEventUI = () => {
     const handlers = {
         startPM: ChatService.startPM,
         sendFish: ChatService.sendFish,
-        updateRoom: processingOpenChat,
-        openChat: openChat,
+        prepareChat: prepareChat,
     };
     ChatUI.bindEventUI(handlers);
 }
@@ -146,18 +146,22 @@ const openChat = async (partner) => {
  * @param {string} roomId - The unique identifier for the chat room.
  * @returns {Promise<void>}
  */
+const prepareChat = async (partner, roomId) => {
+    if (!User.isInRoom(roomId)) {
+        const chatResult = new Promise((resolve, reject) => {
+            ChatService.startPM(partner);
+            pendingStartPMRequest[roomId] = resolve;
 
-const processingOpenChat = async (partner, roomId) => {
-    const chatResult = new Promise((resolve, reject) => {
-        ChatService.startPM(partner);
-        pendingStartPMRequest[roomId] = resolve;
+            setTimeout(() => {
+                reject();
+            }, 5000);
+            //Fix later: make reject sync with startPMStatus event
+        });
 
-        setTimeout(() => {
-            reject();
-        }, 5000);
-        //Fix later: make reject sync with startPMStatus event
-    });
-    await chatResult;
+        await chatResult.catch(() => {
+            throw new Error('Chat setup timed out.');
+        });
+    }
 
     await openChat(partner);
     ChatModel.updateRoom(roomId, 'active', partner);

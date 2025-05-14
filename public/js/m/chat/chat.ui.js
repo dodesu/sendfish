@@ -47,10 +47,10 @@ export const bindEventUI = (handlers) => {
         event => handleSendFish(event, handlers.sendFish));
 
     UI.pendingFishes.addEventListener('click',
-        event => handlePendingFishClick(event, handlers.updateRoom));
+        event => handlePendingFishClick(event, handlers.prepareChat));
 
     UI.fishBaskets.addEventListener('click',
-        event => handleActiveFishClick(event, handlers.openChat));
+        event => handleActiveFishClick(event, handlers.prepareChat));
 }
 
 export const loadChats = (type, chats) => {
@@ -157,7 +157,7 @@ const handleSendFish = async (e, sendFish) => {
  * @param {Event} e
  * @param {Function} updateRoom - ChatModel.updateRoom injected via controller, updates the room type (pending -> active)
  */
-const handlePendingFishClick = (e, processingOpenChat) => {
+const handlePendingFishClick = async (e, prepareChat) => {
     const { pendingFishes, catId } = UI;
     const clickedLink = e.target.closest("li");
     if (clickedLink && pendingFishes.contains(clickedLink)) {
@@ -175,21 +175,32 @@ const handlePendingFishClick = (e, processingOpenChat) => {
         // Update the room
         const currentId = catId.textContent;
         const roomId = `${[currentId, partner].sort().join('-')}`;
-        processingOpenChat(partner, roomId);
+        try {
+            await prepareChat(partner, roomId);
+        } catch (error) {
+            console.error(error);
+            showToast(error, 'error');
+        }
     }
 }
 
-const handleActiveFishClick = (e, openChat) => {
+const handleActiveFishClick = async (e, prepareChat) => {
     const { fishBaskets } = UI;
     const clickedLink = e.target.closest("li");
     if (clickedLink && fishBaskets.contains(clickedLink)) {
         e.preventDefault();
         const partner = clickedLink.querySelector("a").textContent;
+        const roomId = clickedLink.dataset.roomId;
         setCurrentChat(partner);
         newChat(partner);
         //fix: should create a new func for this - addFishList is unnecessary
-        openChat(partner);
-        //note: animation loading should be added 
+        //note: animation loading should be added  
+        try {
+            await prepareChat(partner, roomId);
+        } catch (error) {
+            console.error(error);
+            showToast(error, 'error');
+        }
     }
 }
 
