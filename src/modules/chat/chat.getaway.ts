@@ -10,8 +10,10 @@ import {
 import { Server, Socket } from 'socket.io';
 import { Logger } from '@nestjs/common';
 import { RedisService } from '../redis/redis.service';
+// Interfaces
 import { Cat } from 'src/interfaces/Cat';
 import { Fish } from 'src/interfaces/Fish';
+import { SocketResponse } from 'src/interfaces/socket-response';
 
 
 @WebSocketGateway({
@@ -60,44 +62,73 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @SubscribeMessage('startPM')
     async handleStartPM(@MessageBody() data: { sender: string, receiver: string }, @ConnectedSocket() catSocket: Socket) {
         const { sender, receiver } = data;
+        const responseEvent = 'startPMStatus';
+        let socketResponse: SocketResponse;
         const targetCat = this._activeCats.get(receiver);
         if (!targetCat) {
-            this.server.to(catSocket.id).emit('error', { type: 'error', message: 'Target cat id not found!' });
+            socketResponse = {
+                type: 'fail',
+                data: null,
+                message: 'Target cat id not found!'
+            };
+            this.emitResponse(catSocket.id, responseEvent, socketResponse);
             return;
         }
 
         //Check if the sender use other's id
+        // This condition is not necessary if user use multi socket(many tabs)
         const confirm = this._activeCats.get(sender)?.socketId === catSocket.id;
         if (!confirm) {
-            this.server.to(catSocket.id).emit('error', { type: 'error', message: 'You are cheating!' });
+            socketResponse = {
+                type: 'fail',
+                data: null,
+                message: 'Your cat id is already existed!'
+            };
+            this.emitResponse(catSocket.id, responseEvent, socketResponse);
             return;
         }
 
         // Check if the sender is the same as the receiver
         if (sender === receiver) {
-            this.server.to(catSocket.id).emit('error', { type: 'error', message: 'You cannot send fish to yourself!' });
+            socketResponse = {
+                type: 'fail',
+                data: null,
+                message: 'You cannot send fish to yourself!'
+            };
+            this.emitResponse(catSocket.id, responseEvent, socketResponse);
             return;
         }
 
         const roomId = `${[sender, receiver].sort().join('-')}`;
         if (catSocket.rooms.has(roomId)) {
             // If the room already exists, no need to join again
-            return this.server
-                .to(catSocket.id)
-                .emit('error', {
-                    type: 'info',
-                    message: 'You are already in your fish basket list'
-                });
+            socketResponse = {
+                type: 'info',
+                data: null,
+                message: 'This cat has already been added to the list.'
+            };
+            this.emitResponse(catSocket.id, responseEvent, socketResponse);
+            return;
         }
 
         const publicKey = await this._redisService.get(receiver);
         // Check if the public key is available
         if (!publicKey) {
-            this.server.to(catSocket.id).emit('error', { type: 'error', message: `Target's public key not found!` });
+            socketResponse = {
+                type: 'fail',
+                data: null,
+                message: 'Target public key not found!'
+            };
+            this.emitResponse(catSocket.id, responseEvent, socketResponse);
             return;
         }
+
+        socketResponse = {
+            type: 'success',
+            data: { roomId, publicKey, receiver }
+        };
         catSocket.join(roomId);
-        this.server.to(catSocket.id).emit('startPMStatus', { roomId, publicKey, receiver });
+        this.emitResponse(catSocket.id, responseEvent, socketResponse);
     }
 
     @SubscribeMessage('sendFish')
@@ -147,5 +178,15 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
             return (room?.has(sender) && room?.has(receiver)) ?? false;
         }
         return room?.has(sender) ?? false;
+    }
+
+    /**
+     * Emits a response to a specific socket.
+     * @param socketId the socket ID to emit to
+     * @param event the event name to emit
+     * @param socketResponse the response to emit
+     */
+    private emitResponse(socketId: string, event: string, socketResponse: SocketResponse) {
+        this.server.to(socketId).emit(event, socketResponse);
     }
 }

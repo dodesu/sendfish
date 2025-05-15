@@ -52,7 +52,13 @@ const InitEventWS = () => {
  */
 
 const handleStartPMStatus = async (res) => {
-    const { roomId, publicKey, receiver } = res;
+    if (res.type !== 'success') {
+        showToast(res.message, res.type === 'fail' ? 'error' : 'info');
+        //Fix latter: this is shit.
+        return;
+    }
+
+    const { roomId, publicKey, receiver } = res.data;
     try {
         await ChatService.establishChatSharedKey(roomId, publicKey, receiver);
         ChatUI.newChat(receiver);
@@ -168,3 +174,5 @@ const prepareChat = async (partner, roomId) => {
     await openChat(roomId);
     ChatModel.updateRoom(roomId, 'active', partner);
 }
+// change notification of ws event
+// render message status
