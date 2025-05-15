@@ -11,8 +11,8 @@ import { Server, Socket } from 'socket.io';
 import { Logger } from '@nestjs/common';
 import { RedisService } from '../redis/redis.service';
 // Interfaces
-import { Cat } from 'src/interfaces/Cat';
-import { Fish } from 'src/interfaces/Fish';
+import { Cat } from 'src/interfaces/cat';
+import { Fish } from 'src/interfaces/fish';
 import { SocketResponse } from 'src/interfaces/socket-response';
 
 
