@@ -147,7 +147,8 @@ const handleSendFish = async (e, sendFish) => {
         } catch (error) {
             console.error(error);
         }
-        renderFish('sent', fishKey, fishInput.value.trimEnd());
+        const timestamp = new Date().toISOString();
+        renderFish('sent', fishKey, timestamp, fishInput.value.trimEnd());
     }
 
 }
@@ -231,7 +232,7 @@ export const shouldIgnoreOwnMessage = (sender) => {
     }
     return false;
 }
-export const renderFish = (type, fishKey, message = '') => {
+export const renderFish = (type, fishKey, timestamp, message = '') => {
     // Validate the message type
     if (type !== 'sent' && type !== 'received') {
         throw new Error(`Invalid message type: ${type}. It should be 'sent' or 'received'.`);
@@ -266,6 +267,8 @@ export const renderFish = (type, fishKey, message = '') => {
     if (statusEl) {
         fishTank.removeChild(statusEl);
     }
+
+    fishItem.dataset.timestamp = timestamp;
     // Add the new fish message to the chat box
     fishTank.appendChild(fishItem);
     // Scroll to the bottom of the chat box

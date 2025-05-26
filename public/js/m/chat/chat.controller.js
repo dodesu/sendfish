@@ -75,7 +75,7 @@ const handleStartPMStatus = async (res) => {
 }
 
 const handleReceiveFish = async (fish) => {
-    const { id, roomId, sender, fishEncrypted } = fish;
+    const { id, roomId, sender, fishEncrypted, time } = fish;
 
     if (ChatUI.shouldIgnoreOwnMessage(sender)) {
         return;
@@ -89,7 +89,7 @@ const handleReceiveFish = async (fish) => {
 
     let fishText = await ChatService.decryptFish(roomId, fishEncrypted);
     const fishKey = `${roomId}${id}`;
-    ChatUI.renderFish('received', fishKey, fishText);
+    ChatUI.renderFish('received', fishKey, time, fishText);
     acknowledgeFish(fishKey);
 };
 
@@ -136,10 +136,10 @@ const openChat = async (roomId) => {
         const text = await ChatService.decryptFish(roomId, msg.fishEncrypted);
         const fishKey = `${roomId}${msg.id}`;
         if (msg.sender === current) {
-            ChatUI.renderFish('sent', fishKey, text);
+            ChatUI.renderFish('sent', fishKey, msg.time, text);
         }
         else {
-            ChatUI.renderFish('received', fishKey, text);
+            ChatUI.renderFish('received', fishKey, msg.time, text);
         }
     }
     //Fix me: join room after all messages are loaded to ready chat now.
