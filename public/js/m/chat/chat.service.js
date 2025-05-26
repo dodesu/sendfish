@@ -102,6 +102,12 @@ export const decryptFish = async (roomId, fishEncrypted) => {
     return fishText;
 }
 
+/**
+ * Send a delivery confirmation to the server
+ * @param {string} keyId - The key of the fish in the database
+ */
+export const ackFish = (keyId) => Socket.emit('fish:delivered', keyId);
+
 //Utils functions
 const getAesKey = async (roomId) => {
     const AesKeyBase64 = localStorage.getItem(roomId);

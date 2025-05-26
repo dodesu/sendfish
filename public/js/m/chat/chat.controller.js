@@ -37,7 +37,8 @@ const InitEventWS = () => {
     const handlers = {
         startPMStatus: handleStartPMStatus,
         receiveFish: handleReceiveFish,
-        pendingFish: handlePendingFish
+        pendingFish: handlePendingFish,
+        fishStatus: ChatUI.setFishStatus
     };
     bindEventWS(handlers);
 }
@@ -89,9 +90,10 @@ const handleReceiveFish = async (fish) => {
     let fishText = await ChatService.decryptFish(roomId, fishEncrypted);
     const fishKey = `${roomId}${id}`;
     ChatUI.renderFish('received', fishKey, fishText);
+    acknowledgeFish(fishKey);
 };
 
-export const handlePendingFish = async (fish) => {
+const handlePendingFish = async (fish) => {
     const { sender, roomId } = fish;
 
     try {
@@ -104,6 +106,11 @@ export const handlePendingFish = async (fish) => {
     } catch (error) {
         console.error("Error saving message to the database: ", error);
     }
+    acknowledgeFish(`${roomId}${fish.id}`);
+}
+
+const acknowledgeFish = (keyId) => {
+    ChatService.ackFish(keyId);
 }
 
 const setUpEventUI = () => {

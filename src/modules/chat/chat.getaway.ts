@@ -133,42 +133,84 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     @SubscribeMessage('sendFish')
     handleSendFish(@MessageBody() fish: Fish, @ConnectedSocket() catSocket: Socket) {
+        const { receiver, roomId, id } = fish;
+        const sendInRoomEvent = 'receiveFish';
+        const sendDirectlyEvent = 'pendingFish';
+        const responseEvent = 'fish:status';
+        type fishStatus = {
+            keyId: string,
+            status: 'Delivered' | 'Seen' | 'Failed',
+            errorInfo?: string
+        };
 
-        const { receiver, roomId } = fish;
         // Check if data is valid
         if (!fish) {
-            this.server
-                .to(catSocket.id)
-                .emit('sendFishStatus', { roomId: roomId, status: 'error', message: 'Invalid fish data!' });
+            const payload: fishStatus = {
+                keyId: roomId + id,
+                status: 'Failed',
+                errorInfo: 'Invalid fish data!'
+            }
+
+            this.server.to(catSocket.id)
+                .emit(responseEvent, payload);
             return;
         }
 
         const receiverSocket = this._activeCats.get(receiver)?.socketId;
         //Check if receiver is online
         if (!receiverSocket) {
-            this.server
-                .to(catSocket.id)
-                .emit('sendFishStatus', { roomId: roomId, status: 'undelivered', message: 'That cat is not online!' });
+            const payload: fishStatus = {
+                keyId: roomId + id,
+                status: 'Failed',
+                errorInfo: 'That cat is not online!'
+            }
+
+            this.server.to(catSocket.id)
+                .emit(responseEvent, payload);
             return;
         }
 
         // If both sender and receiver are in the room, send the fish directly
         // If not, send the fish to the receiver's socket directly
         const bothInRoom = this.isSocketInRoom(roomId, catSocket.id, receiverSocket);
-        this.server.to(catSocket.id).emit('error', { type: 'info', message: `That cat ${bothInRoom ? 'was' : 'not'} in room.` });
+
+        this.server.to(catSocket.id)
+            .emit('error', { type: 'info', message: `That cat ${bothInRoom ? 'was' : 'not'} in room.` }); //this is for debugging
+
         fish.time = new Date().toISOString(); //If set in the client, it can be duplicated
+
         const count = this._roomCount.get(roomId) ?? 0;
+        //If set in the client, it can be duplicated
         fish.id = fish.id !== count + 1 ? count + 1 : fish.id;
+
         if (bothInRoom) {
-            this.server.to(roomId).emit('receiveFish', fish);
+            this.server.to(roomId)
+                .emit(sendInRoomEvent, fish);
         } else {
-            this.server.to(receiverSocket).emit('pendingFish', fish);
+            this.server.to(receiverSocket)
+                .emit(sendDirectlyEvent, fish);
         }
+        // Update the room count -last fish.
         this._roomCount.set(roomId, fish.id);
-        // Notify the sender that the fish has been sent
-        this.server
-            .to(receiverSocket)
-            .emit('sendFishStatus', { roomId: roomId, status: 'sent' });
+    }
+
+    @SubscribeMessage('fish:delivered')
+    handleAck(@MessageBody() keyId: string, @ConnectedSocket() catSocket: Socket) {
+        const roomId = keyId.substring(0, 21);
+        const id = keyId.substring(21);
+        type fishStatus = {
+            keyId: string,
+            status: 'Delivered' | 'Seen' | 'Failed',
+            errorInfo?: string
+        };//fixme: move to interface
+
+        const payload: fishStatus = {
+            keyId: keyId,
+            status: 'Delivered'
+        };
+
+        this.server.to(roomId)
+            .emit('fish:status', payload);
     }
 
     private isSocketInRoom(roomId: string, sender: string, receiver?: string): boolean {

@@ -253,24 +253,44 @@ export const renderFish = (type, fishKey, message = '') => {
     fishText.className = "fish-text";
 
     if (type === 'sent') {
-        fishText.innerText = message;
-        const status = document.createElement('span');
-        status.className = "bubble-status";
-        status.textContent = "Delivered";
-        fishItem.appendChild(status);
         // Clear the input field
         fishInput.value = '';
-    } else {
-        fishText.innerText = message;
     }
+    fishText.innerText = message;
 
     bubble.appendChild(fishText);
     fishItem.prepend(bubble);
 
+    // Remove the existing status element
+    const statusEl = fishTank.querySelector('.bubble-status');
+    if (statusEl) {
+        fishTank.removeChild(statusEl);
+    }
     // Add the new fish message to the chat box
     fishTank.appendChild(fishItem);
     // Scroll to the bottom of the chat box
     fishWrapper.scrollTop = fishWrapper.scrollHeight;
+}
+
+export const setFishStatus = (payload) => {
+    const { keyId, status } = payload;
+    const { fishTank } = UI;
+    console.log('Inside');
+
+    const lastMessage = Array.from(fishTank.querySelectorAll('.fish-right')).pop();
+    if (lastMessage.id != keyId) {
+        return;
+    }
+
+    const lastElement = fishTank.lastElementChild;
+    if (lastElement.classList.contains('bubble-status')) {
+        lastElement.textContent = status;
+    } else {
+        const statusEl = document.createElement('span');
+        statusEl.className = "flex flex-col items-end bubble-status";
+        statusEl.textContent = status;
+        fishTank.appendChild(statusEl);
+    }
 }
 
 export const addFishList = async (type, title) => {
