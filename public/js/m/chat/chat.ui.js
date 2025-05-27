@@ -133,21 +133,24 @@ const handleSendFish = async (e, sendFish) => {
 
         const sender = catId.textContent;
         const receiver = basketTitle.textContent;
+        const timestamp = Date.now();
         const fishInfo = {
             text: fishInput.value,
             sender: sender,
             receiver: receiver,
-            roomId: `${[sender, receiver].sort().join('-')}`
+            roomId: `${[sender, receiver].sort().join('-')}`,
+            timestamp: timestamp
         }
 
         let fishKey;
-
+        const localTime = new Date(timestamp).toLocaleString();
         try {
             fishKey = await sendFish(fishInfo);
         } catch (error) {
             console.error(error);
         }
-        renderFish('sent', fishKey, fishInput.value.trimEnd());
+
+        renderFish('sent', fishKey, localTime, fishInput.value.trimEnd());
     }
 
 }
@@ -231,7 +234,7 @@ export const shouldIgnoreOwnMessage = (sender) => {
     }
     return false;
 }
-export const renderFish = (type, fishKey, message = '') => {
+export const renderFish = (type, fishKey, timestamp, message = '') => {
     // Validate the message type
     if (type !== 'sent' && type !== 'received') {
         throw new Error(`Invalid message type: ${type}. It should be 'sent' or 'received'.`);
@@ -253,24 +256,58 @@ export const renderFish = (type, fishKey, message = '') => {
     fishText.className = "fish-text";
 
     if (type === 'sent') {
-        fishText.innerText = message;
-        const status = document.createElement('span');
-        status.className = "bubble-status";
-        status.textContent = "Delivered";
-        fishItem.appendChild(status);
         // Clear the input field
         fishInput.value = '';
-    } else {
-        fishText.innerText = message;
     }
+    fishText.innerText = message;
 
     bubble.appendChild(fishText);
     fishItem.prepend(bubble);
 
+    // Remove the existing status element
+    const statusEl = fishTank.querySelector('.bubble-status');
+    if (statusEl) {
+        fishTank.removeChild(statusEl);
+    }
+
+    fishItem.dataset.timestamp = timestamp;
     // Add the new fish message to the chat box
     fishTank.appendChild(fishItem);
     // Scroll to the bottom of the chat box
     fishWrapper.scrollTop = fishWrapper.scrollHeight;
+}
+
+
+/**
+ * Updates the status of the last sent fish message in the chat UI.
+ * If the last message's ID matches the provided keyId, updates its status.
+ * Otherwise, appends a new status element to the chat.
+ *
+ * @param {Object} payload - An object containing the status information.
+ * @param {string} payload.keyId - The unique identifier of the message to update.
+ * @param {string} payload.status - The status to be displayed ('Delivered', 'Seen', or 'Failed'.).
+ * @returns {string} - The ID of the last message in the chat.
+ */
+
+export const setFishStatus = (payload) => {
+    const { keyId, status } = payload;
+    const { fishTank } = UI;
+
+    const lastMessage = Array.from(fishTank.querySelectorAll('.fish-right')).pop();
+    if (lastMessage.id != keyId) {
+        return lastMessage.id;
+    }
+
+    const lastElement = fishTank.lastElementChild;
+    if (lastElement.classList.contains('bubble-status')) {
+        lastElement.textContent = status;
+    } else {
+        const statusEl = document.createElement('span');
+        statusEl.className = "flex flex-col items-end bubble-status";
+        statusEl.textContent = status;
+        fishTank.appendChild(statusEl);
+    }
+    return lastMessage.id;
 }
 
 export const addFishList = async (type, title) => {

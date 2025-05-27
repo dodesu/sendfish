@@ -18,6 +18,7 @@ export const bindEventWS = (handlers) => {
     Socket.on('startPMStatus', handlers.startPMStatus);
     Socket.on('receiveFish', handlers.receiveFish);
     Socket.on('pendingFish', handlers.pendingFish);
+    Socket.on('fish:status', handlers.fishStatus);
 }
 
 const onConnected = () => {

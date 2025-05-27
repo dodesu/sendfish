@@ -37,7 +37,8 @@ const InitEventWS = () => {
     const handlers = {
         startPMStatus: handleStartPMStatus,
         receiveFish: handleReceiveFish,
-        pendingFish: handlePendingFish
+        pendingFish: handlePendingFish,
+        fishStatus: handleFishStatus
     };
     bindEventWS(handlers);
 }
@@ -52,7 +53,13 @@ const InitEventWS = () => {
  */
 
 const handleStartPMStatus = async (res) => {
-    const { roomId, publicKey, receiver } = res;
+    if (res.type !== 'success') {
+        showToast(res.message, res.type === 'fail' ? 'error' : 'info');
+        //Fix latter: this is shit.
+        return;
+    }
+
+    const { roomId, publicKey, receiver } = res.data;
     try {
         await ChatService.establishChatSharedKey(roomId, publicKey, receiver);
         ChatUI.newChat(receiver);
@@ -68,8 +75,8 @@ const handleStartPMStatus = async (res) => {
 }
 
 const handleReceiveFish = async (fish) => {
-    const { id, roomId, sender, fishEncrypted } = fish;
-
+    const { id, roomId, sender, fishEncrypted, timestamp } = fish;
+    const localTime = new Date(timestamp).toLocaleString();
     if (ChatUI.shouldIgnoreOwnMessage(sender)) {
         return;
     }
@@ -82,10 +89,11 @@ const handleReceiveFish = async (fish) => {
 
     let fishText = await ChatService.decryptFish(roomId, fishEncrypted);
     const fishKey = `${roomId}${id}`;
-    ChatUI.renderFish('received', fishKey, fishText);
+    ChatUI.renderFish('received', fishKey, localTime, fishText);
+    acknowledgeFish(fishKey);
 };
 
-export const handlePendingFish = async (fish) => {
+const handlePendingFish = async (fish) => {
     const { sender, roomId } = fish;
 
     try {
@@ -98,6 +106,23 @@ export const handlePendingFish = async (fish) => {
     } catch (error) {
         console.error("Error saving message to the database: ", error);
     }
+    acknowledgeFish(`${roomId}${fish.id}`);
+}
+
+const acknowledgeFish = (keyId) => {
+    ChatService.ackFish(keyId);
+}
+
+/**
+ * Handles the 'fish:status' WebSocket event.
+ * Updates the message status in the database. Additionally, it updates the status 
+ * element on the UI only if the message is the last sent message.
+ *
+ * @param {Object} payload - An object containing the status information.
+ */
+const handleFishStatus = (payload) => {
+    const keyIdFish = ChatUI.setFishStatus(payload);
+    ChatModel.updateMessageStatus(keyIdFish, payload.status);
 }
 
 const setUpEventUI = () => {
@@ -122,14 +147,14 @@ const openChat = async (roomId) => {
     for (const msg of messages) {
         const text = await ChatService.decryptFish(roomId, msg.fishEncrypted);
         const fishKey = `${roomId}${msg.id}`;
+        const localTime = new Date(msg.timestamp).toLocaleString();
         if (msg.sender === current) {
-            ChatUI.renderFish('sent', fishKey, text);
+            ChatUI.renderFish('sent', fishKey, localTime, text);
         }
         else {
-            ChatUI.renderFish('received', fishKey, text);
+            ChatUI.renderFish('received', fishKey, localTime, text);
         }
     }
-    //Fix me: join room after all messages are loaded to ready chat now.
 }
 
 /**

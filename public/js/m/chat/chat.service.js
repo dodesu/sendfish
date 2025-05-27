@@ -64,7 +64,7 @@ export const establishChatSharedKey = async (roomId, publicKey, receiver) => {
 }
 
 export const sendFish = async (fishInfo) => {
-    const { text, sender, receiver, roomId } = fishInfo;
+    const { text, sender, receiver, roomId, timestamp } = fishInfo;
     let fish_encrypt;
     try {
         const AESkey = await getAesKey(roomId);
@@ -80,13 +80,14 @@ export const sendFish = async (fishInfo) => {
         sender: sender,
         receiver: receiver,
         roomId: roomId,
-        status: 'delivered'
+        status: 'Sent',
+        timestamp: timestamp
     };
-
     await saveFish(fish);
-    //note: save in response better
-    delete fish.status;
-    // Don't send the status to the receiver
+
+    delete fish.status;    // UI only, no need to send
+    delete fish.timestamp; // server creates new timestamp- more reliable
+
     Socket.emit('sendFish', fish);
     return `${roomId}${id}`;
 }
@@ -101,6 +102,12 @@ export const decryptFish = async (roomId, fishEncrypted) => {
     }
     return fishText;
 }
+
+/**
+ * Send a delivery confirmation to the server
+ * @param {string} keyId - The key of the fish in the database
+ */
+export const ackFish = (keyId) => Socket.emit('fish:delivered', keyId);
 
 //Utils functions
 const getAesKey = async (roomId) => {
