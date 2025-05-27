@@ -1,5 +1,11 @@
 import { showToast } from "../../utils/toast.js";
 
+let timeZone = localStorage.getItem('timeZone');
+if (!timeZone) {
+    timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    localStorage.setItem('timeZone', timeZone);
+}//set here temporarily
+
 const UI = {
     newBtn: document.querySelector('#new-fish'),
     fishTank: document.querySelector('#fish-tank'),
