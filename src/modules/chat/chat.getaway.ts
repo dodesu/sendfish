@@ -177,7 +177,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         this.server.to(catSocket.id)
             .emit('error', { type: 'info', message: `That cat ${bothInRoom ? 'was' : 'not'} in room.` }); //this is for debugging
 
-        fish.time = new Date().toISOString(); //If set in the client, it can be duplicated
+        fish.timestamp = Date.now(); //If set in the client, it can be duplicated
 
         const count = this._roomCount.get(roomId) ?? 0;
         //If set in the client, it can be duplicated

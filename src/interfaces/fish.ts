@@ -4,5 +4,5 @@ export interface Fish {
     receiver: string;
     roomId: string;
     fishEncrypted: { iv: string; ciphertext: string };
-    time?: Date | string;
+    timestamp?: number;
 }

@@ -1,11 +1,5 @@
 import { showToast } from "../../utils/toast.js";
 
-let timeZone = localStorage.getItem('timeZone');
-if (!timeZone) {
-    timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    localStorage.setItem('timeZone', timeZone);
-}//set here temporarily
-
 const UI = {
     newBtn: document.querySelector('#new-fish'),
     fishTank: document.querySelector('#fish-tank'),
@@ -139,22 +133,24 @@ const handleSendFish = async (e, sendFish) => {
 
         const sender = catId.textContent;
         const receiver = basketTitle.textContent;
+        const timestamp = Date.now();
         const fishInfo = {
             text: fishInput.value,
             sender: sender,
             receiver: receiver,
-            roomId: `${[sender, receiver].sort().join('-')}`
+            roomId: `${[sender, receiver].sort().join('-')}`,
+            timestamp: timestamp
         }
 
         let fishKey;
-
+        const localTime = new Date(timestamp).toLocaleString();
         try {
             fishKey = await sendFish(fishInfo);
         } catch (error) {
             console.error(error);
         }
-        const timestamp = new Date().toISOString();
-        renderFish('sent', fishKey, timestamp, fishInput.value.trimEnd());
+
+        renderFish('sent', fishKey, localTime, fishInput.value.trimEnd());
     }
 
 }
