@@ -40,7 +40,6 @@ export const saveFish = async (fish) => {
  * @param {string} roomId - The ID of the room to count messages for.
  * @returns {Promise<number>} - A promise that resolves to the count of messages in the room.
  */
-
 export const countMessagesInRoom = async (roomId) => {
     return await db.countFromIndex('messages', 'roomId', roomId);
 }
@@ -114,4 +113,31 @@ export const getChats = async (roomId) => {
         console.error(error);
         return null;
     }
+}
+
+/**
+ * Updates the status of a message in the 'messages' object store in IndexedDB.
+ * The message is identified by its keyId.
+ * @param {string} keyId - The keyId of the message to update.
+ * @param {string} newStatus - The new status of the message. Must be one of 'Delivered', 'Seen', or 'Failed'.
+ * @returns {Promise<void>}
+ * @throws {Error} If the provided status is not one of the allowed statuses.
+ */
+export const updateMessageStatus = async (keyId, newStatus) => {
+    const allowedStatus = ['Delivered', 'Seen', 'Failed'];
+    if (!allowedStatus.includes(newStatus)) {
+        throw new Error('Invalid status. Allowed status: ' +
+            allowedStatus.join(', '));
+    }
+
+    const tx = db.transaction('messages', 'readwrite');
+    const store = tx.objectStore('messages');
+
+    const obj = await store.get(keyId);
+    if (obj && obj.status) {
+        obj.status = newStatus;
+        await store.put(obj, keyId);
+    }
+
+    await tx.done;
 }

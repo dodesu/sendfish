@@ -277,14 +277,25 @@ export const renderFish = (type, fishKey, timestamp, message = '') => {
     fishWrapper.scrollTop = fishWrapper.scrollHeight;
 }
 
+
+/**
+ * Updates the status of the last sent fish message in the chat UI.
+ * If the last message's ID matches the provided keyId, updates its status.
+ * Otherwise, appends a new status element to the chat.
+ *
+ * @param {Object} payload - An object containing the status information.
+ * @param {string} payload.keyId - The unique identifier of the message to update.
+ * @param {string} payload.status - The status to be displayed ('Delivered', 'Seen', or 'Failed'.).
+ * @returns {string} - The ID of the last message in the chat.
+ */
+
 export const setFishStatus = (payload) => {
     const { keyId, status } = payload;
     const { fishTank } = UI;
-    console.log('Inside');
 
     const lastMessage = Array.from(fishTank.querySelectorAll('.fish-right')).pop();
     if (lastMessage.id != keyId) {
-        return;
+        return lastMessage.id;
     }
 
     const lastElement = fishTank.lastElementChild;
@@ -296,6 +307,7 @@ export const setFishStatus = (payload) => {
         statusEl.textContent = status;
         fishTank.appendChild(statusEl);
     }
+    return lastMessage.id;
 }
 
 export const addFishList = async (type, title) => {

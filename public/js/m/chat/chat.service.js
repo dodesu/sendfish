@@ -80,7 +80,7 @@ export const sendFish = async (fishInfo) => {
         sender: sender,
         receiver: receiver,
         roomId: roomId,
-        status: 'sent',
+        status: 'Sent',
         timestamp: timestamp
     };
     await saveFish(fish);

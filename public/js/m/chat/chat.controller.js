@@ -38,7 +38,7 @@ const InitEventWS = () => {
         startPMStatus: handleStartPMStatus,
         receiveFish: handleReceiveFish,
         pendingFish: handlePendingFish,
-        fishStatus: ChatUI.setFishStatus
+        fishStatus: handleFishStatus
     };
     bindEventWS(handlers);
 }
@@ -113,6 +113,18 @@ const acknowledgeFish = (keyId) => {
     ChatService.ackFish(keyId);
 }
 
+/**
+ * Handles the 'fish:status' WebSocket event.
+ * Updates the message status in the database. Additionally, it updates the status 
+ * element on the UI only if the message is the last sent message.
+ *
+ * @param {Object} payload - An object containing the status information.
+ */
+const handleFishStatus = (payload) => {
+    const keyIdFish = ChatUI.setFishStatus(payload);
+    ChatModel.updateMessageStatus(keyIdFish, payload.status);
+}
+
 const setUpEventUI = () => {
     const handlers = {
         startPM: ChatService.startPM,
@@ -143,7 +155,6 @@ const openChat = async (roomId) => {
             ChatUI.renderFish('received', fishKey, localTime, text);
         }
     }
-    //Fix me: join room after all messages are loaded to ready chat now.
 }
 
 /**
@@ -182,5 +193,3 @@ const prepareChat = async (partner, roomId) => {
     await openChat(roomId);
     ChatModel.updateRoom(roomId, 'active', partner);
 }
-// change notification of ws event
-// render message status
